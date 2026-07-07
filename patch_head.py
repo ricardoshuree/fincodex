@@ -26,7 +26,7 @@ from pathlib import Path
 # ---------------------------------------------------------------
 # CONFIG — preencha conforme as plataformas forem ativadas
 # ---------------------------------------------------------------
-LINKEDIN_PARTNER_ID = ""   # LinkedIn Campaign Manager > Insight Tag  (ex: "1234567")
+LINKEDIN_PARTNER_ID = "10517217"   # LinkedIn Campaign Manager > Insight Tag  (ex: "1234567")
 GA4_MEASUREMENT_ID  = "G-8X99WV5M9R"   # Google Analytics 4                       (ex: "G-XXXXXXXXXX")
 META_PIXEL_ID       = ""   # Meta Events Manager                      (ex: "1234567890")
 
