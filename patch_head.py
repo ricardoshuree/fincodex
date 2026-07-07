@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-patch_head.py — FinCodex landing page head patcher
-====================================================
+patch_head.py — FinCodex landing page head patcher (v2)
+========================================================
 Injeta (idempotentemente) meta tags e scripts de tracking no <head>
 estático do index.html exportado pelo Claude Design.
 
@@ -15,6 +15,13 @@ Se os marcadores existem, o conteúdo entre eles é SUBSTITUÍDO
 Se não existem, o bloco é inserido logo após </title>.
 Rodar N vezes produz o mesmo resultado que rodar 1 vez.
 
+Changelog v2:
+- CORRIGIDO: CTA_LISTENER_BLOCK tinha chaves duplicadas ({{ }})
+  herdadas de sintaxe de template .format(), gerando JavaScript
+  inválido e impedindo o evento cta_calendly_click de disparar.
+  Este bloco NÃO passa por .format(), então usa chaves simples.
+- IDs do LinkedIn e GA4 preenchidos.
+
 Slots de tracking: preencha os IDs abaixo quando cada plataforma
 for ativada. ID vazio = slot não injetado (zero JS desnecessário).
 """
@@ -26,14 +33,14 @@ from pathlib import Path
 # ---------------------------------------------------------------
 # CONFIG — preencha conforme as plataformas forem ativadas
 # ---------------------------------------------------------------
-LINKEDIN_PARTNER_ID = "10517217"   # LinkedIn Campaign Manager > Insight Tag  (ex: "1234567")
-GA4_MEASUREMENT_ID  = "G-8X99WV5M9R"   # Google Analytics 4                       (ex: "G-XXXXXXXXXX")
-META_PIXEL_ID       = ""   # Meta Events Manager                      (ex: "1234567890")
+LINKEDIN_PARTNER_ID = "10517217"       # LinkedIn Campaign Manager > Insight Tag
+GA4_MEASUREMENT_ID  = "G-8X99WV5M9R"   # Google Analytics 4
+META_PIXEL_ID       = ""               # Meta Events Manager (ex: "1234567890")
 
 CANONICAL = "https://fincodex.com.br/"
 
 # ---------------------------------------------------------------
-# BLOCO 1 — Meta tags (sempre injetado)
+# BLOCO 1 — Meta tags (sempre injetado; NÃO passa por .format)
 # ---------------------------------------------------------------
 META_BLOCK = """\
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -59,7 +66,9 @@ META_BLOCK = """\
   <meta name="theme-color" content="#1E0E05">"""
 
 # ---------------------------------------------------------------
-# BLOCO 2 — LinkedIn Insight Tag (injetado se PARTNER_ID definido)
+# BLOCO 2 — LinkedIn Insight Tag
+# ATENÇÃO: este bloco PASSA por .format(). Chaves de JavaScript
+# são escritas como {{ }} de propósito — viram { } após o format.
 # ---------------------------------------------------------------
 LINKEDIN_BLOCK = """\
   <!-- LinkedIn Insight Tag -->
@@ -83,7 +92,7 @@ LINKEDIN_BLOCK = """\
   </noscript>"""
 
 # ---------------------------------------------------------------
-# BLOCO 3 — Google Analytics 4 (injetado se MEASUREMENT_ID definido)
+# BLOCO 3 — Google Analytics 4 (PASSA por .format — {{ }} vira { })
 # ---------------------------------------------------------------
 GA4_BLOCK = """\
   <!-- Google Analytics 4 -->
@@ -96,7 +105,7 @@ GA4_BLOCK = """\
   </script>"""
 
 # ---------------------------------------------------------------
-# BLOCO 4 — Meta Pixel (injetado se PIXEL_ID definido)
+# BLOCO 4 — Meta Pixel (PASSA por .format — {{ }} vira { })
 # ---------------------------------------------------------------
 META_PIXEL_BLOCK = """\
   <!-- Meta Pixel -->
@@ -115,6 +124,8 @@ META_PIXEL_BLOCK = """\
 
 # ---------------------------------------------------------------
 # BLOCO 5 — Listener de clique no CTA (event delegation)
+# ATENÇÃO: este bloco NÃO passa por .format() → chaves SIMPLES.
+# (v2: bug de {{ }} corrigido aqui.)
 # Captura cliques em qualquer link para calendly.com, mesmo em
 # elementos renderizados depois pelo bundle da SPA.
 # Reporta a cada plataforma ativa. (Conversão "nível bronze".)
@@ -122,15 +133,15 @@ META_PIXEL_BLOCK = """\
 CTA_LISTENER_BLOCK = """\
   <!-- FinCodex: CTA click listener (event delegation, SPA-safe) -->
   <script>
-    document.addEventListener('click', function (e) {{
+    document.addEventListener('click', function (e) {
       var a = e.target.closest && e.target.closest('a[href*="calendly.com"]');
       if (!a) return;
-      try {{
-        if (window.lintrk) {{ window.lintrk('track', {{ conversion_id: null }}); }}
-        if (window.gtag)   {{ gtag('event', 'cta_calendly_click', {{ link_url: a.href }}); }}
-        if (window.fbq)    {{ fbq('track', 'Lead'); }}
-      }} catch (err) {{ /* nunca quebrar a navegação por causa de tracking */ }}
-    }}, true);
+      try {
+        if (window.lintrk) { window.lintrk('track', { conversion_id: null }); }
+        if (window.gtag)   { gtag('event', 'cta_calendly_click', { link_url: a.href }); }
+        if (window.fbq)    { fbq('track', 'Lead'); }
+      } catch (err) { /* nunca quebrar a navegação por causa de tracking */ }
+    }, true);
   </script>"""
 
 MARK_START = "<!-- fincodex:head start -->"
@@ -162,10 +173,12 @@ def patch(html: str) -> tuple[str, list[str]]:
         actions.append("lang: adicionado" if n else "lang: AVISO — tag <html> não encontrada no formato esperado")
 
     # --- 2. Bloco entre marcadores (substituir ou inserir) -------
+    # NOTA: usa lambda no re.sub para o bloco ser tratado como texto
+    # literal (barras invertidas/refs de grupo no JS não quebram nada).
     block = build_block()
     if MARK_START in html and MARK_END in html:
         pattern = re.escape(MARK_START) + r".*?" + re.escape(MARK_END)
-        html = re.sub(pattern, block, html, count=1, flags=re.S)
+        html = re.sub(pattern, lambda m: block, html, count=1, flags=re.S)
         actions.append("bloco: atualizado (marcadores existentes)")
     else:
         # Remove eventual bloco legado inserido manualmente (evita duplicata):
