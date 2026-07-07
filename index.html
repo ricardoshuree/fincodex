@@ -25,6 +25,26 @@
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#1E0E05">
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-8X99WV5M9R"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-8X99WV5M9R');
+  </script>
+  <!-- FinCodex: CTA click listener (event delegation, SPA-safe) -->
+  <script>
+    document.addEventListener('click', function (e) {{
+      var a = e.target.closest && e.target.closest('a[href*="calendly.com"]');
+      if (!a) return;
+      try {{
+        if (window.lintrk) {{ window.lintrk('track', {{ conversion_id: null }}); }}
+        if (window.gtag)   {{ gtag('event', 'cta_calendly_click', {{ link_url: a.href }}); }}
+        if (window.fbq)    {{ fbq('track', 'Lead'); }}
+      }} catch (err) {{ /* nunca quebrar a navegação por causa de tracking */ }}
+    }}, true);
+  </script>
   <!-- fincodex:head end -->
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
