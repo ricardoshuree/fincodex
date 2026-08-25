@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="escuro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinCodex · Extração do Modelo FOCUS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* Modo CLARO — tom creme, espelha as seções claras do site FinCodex */
+    --brand-bg:#EAE0CC; --brand-surface:#F3ECDB; --brand-surface-2:#E9DFC7;
+    --brand-border:#D9CBAA; --brand-border-hi:#C7B68E;
+    --brand-primary:#8C6323; --brand-primary-dim:rgba(140,99,35,.10); --brand-primary-glow:rgba(140,99,35,.25);
+    --brand-secondary:#6B4A18; --brand-secondary-dim:rgba(107,74,24,.10);
+    --brand-success:#276747; --brand-success-dim:rgba(39,103,71,.10);
+    --brand-error:#B3392B; --brand-error-dim:rgba(179,57,43,.10);
+    --brand-warning:#8C6300; --brand-warning-dim:rgba(140,99,0,.10);
+    --text-primary:#1E0E05; --text-secondary:#4A3A2A; --text-muted:#8A7A64;
+    --font-headline:'Space Grotesk',sans-serif; --font-body:'Inter',sans-serif; --font-mono:'JetBrains Mono',monospace;
+    --shadow-card: 0 8px 30px rgba(30,14,5,.08);
+  }
+  html[data-theme="escuro"]{
+    /* Modo ESCURO — fundo #1E0E05 e dourado #C08830, cores oficiais do fincodex.com.br */
+    --brand-bg:#1E0E05; --brand-surface:#2A1810; --brand-surface-2:#32190A;
+    --brand-border:#3D2A1A; --brand-border-hi:#4F3822;
+    --brand-primary:#C08830; --brand-primary-dim:rgba(192,136,48,.16); --brand-primary-glow:rgba(192,136,48,.40);
+    --brand-secondary:#D9A94D; --brand-secondary-dim:rgba(217,169,77,.14);
+    --brand-success:#4ADE80; --brand-success-dim:rgba(74,222,128,.12);
+    --brand-error:#EF4444; --brand-error-dim:rgba(239,68,68,.12);
+    --brand-warning:#FBBF24; --brand-warning-dim:rgba(251,191,36,.10);
+    --text-primary:#F2E6CE; --text-secondary:#CDBFA4; --text-muted:#8A7A64;
+    --shadow-card: 0 10px 34px rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; background:var(--brand-bg); color:var(--text-primary);
+    font-family:var(--font-body); transition:background .3s ease, color .3s ease;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+  .wrap{max-width:920px; margin:0 auto; padding:0 24px;}
+
+  /* ---------- NAV ---------- */
+  .topnav{
+    position:sticky; top:0; z-index:50; background:var(--brand-bg);
+    border-bottom:1px solid var(--brand-border); backdrop-filter:blur(6px);
+  }
+  .topnav-inner{
+    max-width:920px; margin:0 auto; padding:14px 24px; display:flex; align-items:center;
+    justify-content:space-between; gap:16px;
+  }
+  .logo{font-weight:800; font-size:16px; letter-spacing:.5px; display:flex; align-items:center; gap:8px;}
+  .logo svg{display:block;}
+  .logo-sub{font-family:var(--font-mono); font-size:10px; color:var(--text-muted); letter-spacing:1.5px; text-transform:uppercase; margin-left:4px; border-left:1px solid var(--brand-border); padding-left:8px;}
+  .theme-toggle{
+    display:flex; align-items:center; gap:2px; background:var(--brand-surface-2); border:1px solid var(--brand-border);
+    border-radius:999px; padding:3px; font-family:var(--font-mono); font-size:11px;
+  }
+  .theme-toggle button{
+    border:none; background:transparent; color:var(--text-muted); padding:6px 12px; border-radius:999px;
+    cursor:pointer; font-family:var(--font-mono); font-size:11px; letter-spacing:.5px; transition:all .2s ease;
+  }
+  .theme-toggle button.active{background:var(--brand-primary); color:#fff;}
+
+  /* ---------- PROVIDER TABS ---------- */
+  .provider-tabs{display:flex; gap:8px; padding:16px 0 0; flex-wrap:wrap;}
+  .ptab{
+    font-family:var(--font-mono); font-size:11px; letter-spacing:.5px; padding:9px 16px; border-radius:999px;
+    border:1px solid var(--brand-border); background:var(--brand-surface); color:var(--text-muted); text-transform:uppercase;
+    cursor:pointer; transition:all .25s ease; display:flex; align-items:center; gap:7px;
+  }
+  .ptab-dot{width:7px; height:7px; border-radius:50%; flex-shrink:0; opacity:.55; transition:all .25s ease;}
+  .ptab.disabled{opacity:.45; cursor:not-allowed;}
+  .ptab.disabled .ptab-dot{opacity:.7;}
+
+  /* Glow de marca por provedor — só no estado ativo */
+  .ptab[data-provider="aws"].active{
+    border-color:#FF9900; color:#FF9900; background:rgba(255,153,0,.12); font-weight:700;
+    box-shadow:0 0 0 1px rgba(255,153,0,.25), 0 0 18px rgba(255,153,0,.45);
+  }
+  .ptab[data-provider="aws"] .ptab-dot{background:#FF9900;}
+  .ptab[data-provider="aws"].active .ptab-dot{opacity:1; box-shadow:0 0 8px rgba(255,153,0,.9);}
+
+  .ptab[data-provider="azure"].active{
+    border-color:#0078D4; color:#0078D4; background:rgba(0,120,212,.12); font-weight:700;
+    box-shadow:0 0 0 1px rgba(0,120,212,.25), 0 0 18px rgba(0,120,212,.45);
+  }
+  .ptab[data-provider="azure"] .ptab-dot{background:#0078D4;}
+  .ptab[data-provider="azure"].active .ptab-dot{opacity:1; box-shadow:0 0 8px rgba(0,120,212,.9);}
+
+  .ptab[data-provider="gcp"]{position:relative;}
+  .ptab[data-provider="gcp"]::before{
+    content:""; position:absolute; inset:-6px; border-radius:999px; z-index:-1;
+    background:#8A8A8A;
+    filter:blur(11px); opacity:0; transition:opacity .3s ease;
+  }
+  .ptab[data-provider="gcp"].active{
+    border-color:#8A8A8A; color:#6B6B6B; background:rgba(138,138,138,.14); font-weight:700;
+    box-shadow:0 0 0 1px rgba(138,138,138,.3), 0 0 16px rgba(138,138,138,.35);
+  }
+  html[data-theme="escuro"] .ptab[data-provider="gcp"].active{color:#C4C4C4;}
+  .ptab[data-provider="gcp"].active::before{opacity:.45;}
+  .ptab[data-provider="gcp"] .ptab-dot{
+    background:conic-gradient(from 0deg,#4285F4 0deg 120deg,#EA4335 120deg 240deg,#FBBC05 240deg 360deg);
+  }
+  .ptab[data-provider="gcp"].active .ptab-dot{opacity:1; box-shadow:0 0 6px rgba(138,138,138,.7);}
+
+  .ptab[data-provider="oci"] .ptab-dot{background:#C74634;}
+  .ptab[data-provider="oci"].active{
+    border-color:#C74634; color:#C74634; background:rgba(199,70,52,.12); font-weight:700;
+    box-shadow:0 0 0 1px rgba(199,70,52,.25), 0 0 18px rgba(199,70,52,.45);
+  }
+  .ptab[data-provider="oci"].active .ptab-dot{opacity:1; box-shadow:0 0 8px rgba(199,70,52,.9);}
+  .ptab[data-provider="oci"].disabled{color:#C74634; border-color:rgba(199,70,52,.25);}
+  .ptab[data-provider="oci"].disabled .ptab-dot{opacity:.5;}
+
+  /* ---------- HERO ---------- */
+  .hero{padding:36px 0 28px; border-bottom:1px solid var(--brand-border);}
+  .eyebrow{
+    font-family:var(--font-mono); font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--brand-primary);
+    display:flex; align-items:center; gap:8px; margin-bottom:16px;
+  }
+  .eyebrow .dot{width:6px; height:6px; border-radius:50%; background:var(--brand-primary);}
+  h1,h2,h3,.logo,.step-dot,.req-num{font-family:var(--font-headline);}
+  h1{font-size:clamp(28px,4vw,42px); line-height:1.15; margin:0 0 14px; font-weight:700; letter-spacing:-.5px;}
+  h1 em{font-style:normal; color:var(--brand-primary);}
+  .lede{font-size:17px; line-height:1.6; color:var(--text-secondary); max-width:640px; margin:0 0 22px;}
+  .badge-row{display:flex; gap:8px; flex-wrap:wrap;}
+  .badge{
+    font-family:var(--font-mono); font-size:11px; padding:6px 12px; border-radius:999px; border:1px solid var(--brand-border);
+    color:var(--text-muted); background:var(--brand-surface);
+  }
+
+  /* ---------- TOC ---------- */
+  .toc{display:flex; gap:10px; padding:18px 0; flex-wrap:wrap; border-bottom:1px solid var(--brand-border); margin-bottom:8px;}
+  .toc a{
+    font-size:13px; font-weight:600; color:var(--text-secondary); text-decoration:none; padding:8px 4px; border-bottom:2px solid transparent; cursor:pointer;
+  }
+  .toc a:hover{color:var(--brand-primary); border-color:var(--brand-primary);}
+
+  /* ---------- SECTIONS ---------- */
+  section.block{padding:44px 0;}
+  section.block + section.block{border-top:1px solid var(--brand-border);}
+  .sec-label{
+    font-family:var(--font-mono); font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;
+  }
+  h2{font-size:clamp(22px,3vw,30px); margin:0 0 8px; font-weight:700; letter-spacing:-.3px;}
+  .sec-desc{color:var(--text-secondary); font-size:15px; line-height:1.6; max-width:640px; margin:0 0 28px;}
+
+  /* ---------- REQUIREMENT CARDS ---------- */
+  .req-card{
+    background:var(--brand-surface); border:1px solid var(--brand-border); border-radius:20px; margin-bottom:14px;
+    box-shadow:var(--shadow-card); overflow:hidden;
+  }
+  .req-head{display:flex; align-items:center; gap:14px; padding:18px 20px; cursor:pointer; user-select:none;}
+  .req-num{
+    font-family:var(--font-mono); font-size:12px; font-weight:700; color:var(--brand-primary); background:var(--brand-primary-dim);
+    width:30px; height:30px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .req-title{font-weight:700; font-size:15.5px; flex:1;}
+  .req-chevron{color:var(--text-muted); transition:transform .25s ease; flex-shrink:0;}
+  .req-card.open .req-chevron{transform:rotate(180deg);}
+  .req-body{max-height:0; overflow:hidden; transition:max-height .3s ease;}
+  .req-body-inner{padding:0 20px 22px 64px; color:var(--text-secondary); font-size:14.5px; line-height:1.65;}
+  .req-card.open .req-body{max-height:1100px;}
+
+  table{width:100%; border-collapse:collapse; font-size:13.5px; margin:12px 0;}
+  th,td{text-align:left; padding:9px 10px; border-bottom:1px solid var(--brand-border); vertical-align:top;}
+  th{font-family:var(--font-mono); font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--text-muted); font-weight:600;}
+  code{font-family:var(--font-mono); font-size:12.5px; background:var(--brand-surface-2); padding:2px 6px; border-radius:6px; color:var(--brand-primary);}
+  .callout{
+    border-left:3px solid var(--brand-primary); background:var(--brand-primary-dim); padding:12px 16px; border-radius:0 12px 12px 0;
+    font-size:14px; margin:14px 0; color:var(--text-primary);
+  }
+  .callout.warn{border-color:var(--brand-warning); background:var(--brand-warning-dim);}
+  .callout strong{color:var(--brand-primary);}
+  .callout.warn strong{color:var(--brand-warning);}
+
+  /* ---------- SELF CHECK ---------- */
+  .checklist{background:var(--brand-surface); border:1px solid var(--brand-border); border-radius:20px; padding:24px; box-shadow:var(--shadow-card);}
+  .check-item{display:flex; align-items:flex-start; gap:12px; padding:10px 0; border-bottom:1px solid var(--brand-border); font-size:14.5px;}
+  .check-item:last-child{border-bottom:none;}
+  .check-box{
+    width:20px; height:20px; border-radius:6px; border:1.5px solid var(--brand-border-hi); flex-shrink:0; margin-top:1px;
+    cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .15s ease;
+  }
+  .check-box.checked{background:var(--brand-primary); border-color:var(--brand-primary);}
+  .check-box.checked::after{content:"✓"; color:#fff; font-size:13px; font-weight:800;}
+  .check-result{margin-top:16px; padding:14px 16px; border-radius:12px; font-size:14px; font-weight:600; text-align:center; background:var(--brand-surface-2); color:var(--text-muted);}
+  .check-result.ok{background:var(--brand-success-dim); color:var(--brand-success);}
+
+  /* ---------- STEPS ---------- */
+  .step{display:flex; gap:18px; margin-bottom:6px;}
+  .step-rail{display:flex; flex-direction:column; align-items:center; width:38px; flex-shrink:0;}
+  .step-dot{
+    width:38px; height:38px; border-radius:12px; background:var(--brand-primary-dim); color:var(--brand-primary);
+    font-family:var(--font-mono); font-weight:700; font-size:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .step-line{flex:1; width:1px; background:var(--brand-border); margin:4px 0;}
+  .step-card{
+    flex:1; background:var(--brand-surface); border:1px solid var(--brand-border); border-radius:18px; padding:20px 22px;
+    margin-bottom:22px; box-shadow:var(--shadow-card);
+  }
+  .step-card h3{margin:0 0 8px; font-size:16.5px; font-weight:700;}
+  .step-card p{margin:0 0 10px; font-size:14.5px; line-height:1.65; color:var(--text-secondary);}
+  .step-card ol,.step-card ul{margin:8px 0; padding-left:20px; font-size:14.5px; line-height:1.75; color:var(--text-secondary);}
+  .step-card li{margin-bottom:2px;}
+  pre{
+    background:#0D0D0D; color:#D8D8CC; border-radius:12px; padding:14px 16px; font-family:var(--font-mono); font-size:12.5px;
+    overflow-x:auto; line-height:1.6; margin:10px 0;
+  }
+  html[data-theme="escuro"] pre{background:#000; border:1px solid var(--brand-border);}
+  .mini-table{font-size:12.5px;}
+
+  /* ---------- FAQ ---------- */
+  .faq-item{border-bottom:1px solid var(--brand-border);}
+  .faq-q{padding:16px 4px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; font-weight:600; font-size:14.5px; gap:12px;}
+  .faq-a{max-height:0; overflow:hidden; transition:max-height .3s ease;}
+  .faq-a-inner{padding:0 4px 16px; color:var(--text-secondary); font-size:14px; line-height:1.6;}
+  .faq-item.open .faq-a{max-height:300px;}
+  .faq-item.open .faq-chevron{transform:rotate(180deg);}
+  .faq-chevron{transition:transform .25s ease; color:var(--text-muted); flex-shrink:0;}
+
+  /* ---------- SUMMARY ---------- */
+  .summary-card{
+    background:linear-gradient(135deg,var(--brand-primary-dim),transparent); border:1px solid var(--brand-border); border-radius:20px;
+    padding:26px; box-shadow:var(--shadow-card);
+  }
+  .summary-card ul{margin:10px 0 0; padding-left:20px; font-size:14.5px; line-height:1.8; color:var(--text-secondary);}
+
+  /* ---------- FOOTER ---------- */
+  footer{border-top:1px solid var(--brand-border); padding:32px 0 44px;}
+  .footer-inner{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;}
+  .footer-brand{font-weight:800; font-size:14px;}
+  .footer-note{font-size:12.5px; color:var(--text-muted);}
+  .refs{margin-top:16px; font-size:12.5px; color:var(--text-muted); line-height:1.8;}
+  .refs a{color:var(--brand-primary); text-decoration:none;}
+
+  @media (max-width:640px){
+    .wrap{padding:0 18px;}
+    .step-card{padding:16px;}
+    .req-body-inner{padding-left:20px;}
+  }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="topnav-inner">
+    <div class="logo">
+      <span style="font-weight:400;">fin</span><span style="font-weight:700; color:var(--brand-primary);">Codex</span>
+      <span class="logo-sub">Guia FOCUS</span>
+    </div>
+    <div class="theme-toggle">
+      <button id="btn-escuro" class="active" onclick="setTheme('escuro')">ESCURO</button>
+      <button id="btn-claro" onclick="setTheme('claro')">CLARO</button>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <div class="provider-tabs">
+    <div class="ptab active" data-provider="aws" id="tab-aws" onclick="switchProvider('aws')"><span class="ptab-dot"></span>AWS</div>
+    <div class="ptab" data-provider="azure" id="tab-azure" onclick="switchProvider('azure')"><span class="ptab-dot"></span>Azure</div>
+    <div class="ptab" data-provider="gcp" id="tab-gcp" onclick="switchProvider('gcp')"><span class="ptab-dot"></span>GCP</div>
+    <div class="ptab" data-provider="oci" id="tab-oci" onclick="switchProvider('oci')"><span class="ptab-dot"></span>OCI</div>
+  </div>
+
+  <!-- ================= HERO AWS ================= -->
+  <section class="hero" id="hero-aws">
+    <div class="eyebrow"><span class="dot"></span> Guia de Extração · Modelo FOCUS</div>
+    <h1>Como extrair o modelo <em>FOCUS</em> da sua conta AWS</h1>
+    <p class="lede">Guia passo a passo para o time de billing/cloud do cliente configurar e extrair a exportação de custos no formato padronizado FOCUS, pronta para envio ao time FinCodex.</p>
+    <div class="badge-row">
+      <span class="badge">FOCUS 1.0 GA</span>
+      <span class="badge">AWS Data Exports</span>
+      <span class="badge">CSV.gz ou Parquet</span>
+      <span class="badge">~15 min de configuração</span>
+    </div>
+  </section>
+
+  <!-- ================= HERO AZURE ================= -->
+  <section class="hero" id="hero-azure" style="display:none">
+    <div class="eyebrow"><span class="dot"></span> Guia de Extração · Modelo FOCUS</div>
+    <h1>Como extrair o modelo <em>FOCUS</em> da sua conta Azure</h1>
+    <p class="lede">Guia passo a passo para o time de billing/cloud do cliente configurar e extrair a exportação de custos no Cost Management, pronta para envio ao time FinCodex.</p>
+    <div class="badge-row">
+      <span class="badge">FOCUS v1.2</span>
+      <span class="badge">Azure Cost Management + Billing</span>
+      <span class="badge">CSV ou Parquet</span>
+      <span class="badge">EA / MCA</span>
+    </div>
+  </section>
+
+  <!-- ================= HERO GCP ================= -->
+  <section class="hero" id="hero-gcp" style="display:none">
+    <div class="eyebrow"><span class="dot"></span> Guia de Extração · Modelo FOCUS</div>
+    <h1>Como extrair o modelo <em>FOCUS</em> da sua conta GCP</h1>
+    <p class="lede">Guia passo a passo para o time de billing/cloud do cliente habilitar o export FOCUS no BigQuery e extrair os arquivos para envio ao time FinCodex.</p>
+    <div class="badge-row">
+      <span class="badge">FOCUS v1.0</span>
+      <span class="badge">Preview (pré-GA)</span>
+      <span class="badge">BigQuery → GCS → CSV.gz</span>
+      <span class="badge">~30 min de configuração</span>
+    </div>
+  </section>
+
+  <!-- ================= HERO OCI ================= -->
+  <section class="hero" id="hero-oci" style="display:none">
+    <div class="eyebrow"><span class="dot"></span> Guia de Extração · Modelo FOCUS</div>
+    <h1>Como localizar e baixar o modelo <em>FOCUS</em> na sua conta OCI</h1>
+    <p class="lede">Guia para o time de billing/cloud do cliente configurar o acesso cross-tenancy e localizar os relatórios FOCUS já gerados automaticamente pela Oracle, prontos para envio ao time FinCodex.</p>
+    <div class="badge-row">
+      <span class="badge">FOCUS v1.0</span>
+      <span class="badge">Gerado automaticamente a cada 6h</span>
+      <span class="badge">CSV.gz</span>
+      <span class="badge">Sem configuração de export</span>
+    </div>
+  </section>
+
+  <div class="toc">
+    <a onclick="scrollToSection('premissas')">Premissas de acesso</a>
+    <a onclick="scrollToSection('extracao')">Passo a passo de extração</a>
+    <a onclick="scrollToSection('faq')">Problemas frequentes</a>
+    <a onclick="scrollToSection('enviar')">O que enviar à FinCodex</a>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- ======================  PAINEL AWS  ========================= -->
+  <!-- ============================================================ -->
+  <div class="provider-panel" id="panel-aws">
+
+    <section class="block" id="aws-premissas">
+      <div class="sec-label">Parte 1 — Antes de começar</div>
+      <h2>Premissas de acesso</h2>
+      <p class="sec-desc">Confirme os itens abaixo antes de iniciar a extração. A maioria dos bloqueios na AWS é de permissão — resolver isso primeiro evita retrabalho.</p>
+
+      <div class="req-card" id="req-aws-1">
+        <div class="req-head" onclick="toggleReq('req-aws-1')">
+          <div class="req-num">1</div>
+          <div class="req-title">Identifique o tipo de conta e estrutura organizacional</div>
+          <svg class="req-chevron" width="16" height="16" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+        </div>
+        <div class="req-body"><div class="req-body-inner">
+          <table class="mini-table">
+            <tr><th>Tipo de conta</th><th>Como identificar</th><th>Impacto no billing</th></tr>
+            <tr><td>Standalone</td><td>Conta independente, sem Organizations</td><td>Export disponível diretamente na conta</td></tr>
+            <tr><td>Management Account (payer)</td><td>Conta raiz de uma Organization</td><td>Exporta billing consolidado de todas as contas — recomendado</td></tr>
+            <tr><td>Member Account</td><td>Conta gerida por uma Management Account</td><td>Exporta apenas seus próprios custos</td></tr>
+            <tr><td>GovCloud / China</td><td>Regiões isoladas</td><td>Exportação FOCUS não disponível</td></tr>
+          </table>
+          <div class="callout">Acesse o <a href="https://console.aws.amazon.com" target="_blank">AWS Console</a> → clique no nome da conta (canto superior direito). Se aparecer "Organization" e "Management account", você está na conta pagadora. <strong>Recomendado:</strong> sempre exportar a partir da Management Account.</div>
+        </div></div>
+      </div>
+
+      <div class="req-card" id="req-aws-2">
+        <div class="req-head" onclick="toggleReq('req-aws-2')">
+          <div class="req-num">2</div>
+          <div class="req-title">Acesso IAM ao Billing habilitado</div>
+          <svg class="req-chevron" width="16" height="16" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+        </div>
+        <div class="req-body"><div class="req-body-inner">
+          <p>Este é o bloqueio mais comum e invisível na AWS. Por padrão, apenas o usuário <strong>root</strong> tem acesso ao console de Billing — mesmo usuários IAM com <code>AdministratorAccess</code> ficam bloqueados até o root liberar.</p>
+          <ol>
+            <li>Acesse o Console com a conta <strong>root</strong></li>
+            <li>Canto superior direito → nome da conta → <strong>"Account"</strong></li>
+            <li>Em "IAM user and role access to Billing information", verifique se está <strong>"Activated"</strong></li>
+          </ol>
+          <div class="callout warn">Se estiver "Deactivated": apenas o <strong>root</strong> pode alterar. Acione o responsável pela conta root.</div>
+        </div></div>
+      </div>
+
+      <div class="req-card" id="req-aws-3">
+        <div class="req-head" onclick="toggleReq('req-aws-3')">
+          <div class="req-num">3</div>
+          <div class="req-title">Permissões IAM para Data Exports</div>
+          <svg class="req-chevron" width="16" height="16" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+        </div>
+        <div class="req-body"><div class="req-body-inner">
+          <table class="mini-table">
+            <tr><th>Namespace</th><th>Permissão</th><th>Para quê</th></tr>
+            <tr><td><code>bcm-data-exports</code></td><td>CreateExport</td><td>Criar a exportação FOCUS</td></tr>
+            <tr><td><code>bcm-data-exports</code></td><td>ListExports, GetExport</td><td>Ver exportações existentes</td></tr>
+            <tr><td><code>bcm-data-exports</code></td><td>ListTables, GetTable</td><td>Listar tabelas disponíveis</td></tr>
+            <tr><td><code>cur</code></td><td>PutReportDefinition</td><td>Obrigatório para criação via Data Exports</td></tr>
+            <tr><td><code>s3</code></td><td>PutObject, PutBucketPolicy</td><td>Configurar o bucket de destino</td></tr>
+          </table>
+          <p>Políticas gerenciadas que já cobrem o necessário: <code>AdministratorAccess</code> (requer item 2 ativo), <code>Billing</code> (inclui Data Exports), ou <code>AWSBillingReadOnlyAccess</code> (apenas leitura, não cria exports).</p>
+          <p>Verifique em IAM Console → Users → seu usuário → aba Permissions.</p>
+        </div></div>
+      </div>
+
+      <div class="req-card" id="req-aws-4">
+        <div class="req-head" onclick="toggleReq('req-aws-4')">
+          <div class="req-num">4</div>
+          <div class="req-title">Acesso ao Amazon S3 (bucket de destino)</div>
+          <svg class="req-chevron" width="16" height="16" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+        </div>
+        <div class="req-body"><div class="req-body-inner">
+          <p>O bucket S3 <strong>deve pertencer à mesma conta</strong> que cria a exportação — não é possível entregar em bucket de outra conta.</p>
+          <p><strong>Bucket novo:</strong> requer <code>s3:CreateBucket</code> — o console pode criar automaticamente.<br>
+          <strong>Bucket existente:</strong> requer <code>s3:PutBucketPolicy</code> — a policy atual será substituída pela gerada pelo Data Exports.</p>
+          <div class="callout">Verifique em S3 Console → bucket → aba Permissions se há permissão de escrita e edição de policy.</div>
+        </div></div>
+      </div>
+
+      <div class="req-card" id="req-aws-5">
+        <div class="req-head" onclick="toggleReq('req-aws-5')">
+          <div class="req-num">5</div>
+          <div class="req-title">Restrições de SCP (apenas AWS Organizations)</div>
+          <svg class="req-chevron" width="16" height="16" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+        </div>
+        <div class="req-body"><div class="req-body-inner">
+          <p>Se a conta faz parte de uma Organization, Service Control Policies (SCPs) aplicadas pela Management Account podem bloquear ações de billing/S3 mesmo com permissões IAM corretas.</p>
+          <p>Erros típicos: <code>You don't have permission to access billing information</code> ou <code>explicit deny</code>.</p>
+          <div class="callout warn">Nestes casos, acione o administrador da <strong>Management Account</strong> — o administrador IAM local não controla SCPs.</div>
+        </div></div>
+      </div>
+
+      <div class="req-card" id="req-aws-6">
+        <div class="req-head" onclick="toggleReq('req-aws-6')">
+          <div class="req-num">6</div>
+          <div class="req-title">Disponibilidade do FOCUS no seu ambiente</div>
+          <svg class="req-chevron" width="16" height="16" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+        </div>
+        <div class="req-body"><div class="req-body-inner">
+          <table class="mini-table">
+            <tr><th>Condição</th><th>Suporta FOCUS</th></tr>
+            <tr><td>Standalone / Management / Member Account</td><td style="color:var(--brand-success); font-weight:700;">Sim</td></tr>
+            <tr><td>GovCloud (us-gov-*)</td><td style="color:var(--brand-error); font-weight:700;">Não</td></tr>
+            <tr><td>China (cn-*)</td><td style="color:var(--brand-error); font-weight:700;">Não</td></tr>
+          </table>
+          <p>O console de Data Exports fica na região <strong>us-east-1</strong>, mas os dados cobrem todas as regiões da conta.</p>
+        </div></div>
+      </div>
+
+      <div class="checklist" style="margin-top:28px;">
+        <div style="font-weight:700; margin-bottom:14px; font-size:15px;">Self-check antes de prosseguir</div>
+        <div class="check-item"><div class="check-box" onclick="toggleCheck(this)"></div><div>Identifico o tipo de conta AWS (standalone, Management ou Member)</div></div>
+        <div class="check-item"><div class="check-box" onclick="toggleCheck(this)"></div><div>O acesso IAM ao Billing está habilitado (ativado pelo root)</div></div>
+        <div class="check-item"><div class="check-box" onclick="toggleCheck(this)"></div><div>Tenho <code>bcm-data-exports:CreateExport</code> e <code>cur:PutReportDefinition</code></div></div>
+        <div class="check-item"><div class="check-box" onclick="toggleCheck(this)"></div><div>Tenho acesso de escrita a um bucket S3 na mesma conta</div></div>
+        <div class="check-item"><div class="check-box" onclick="toggleCheck(this)"></div><div>Minha conta não está em região GovCloud ou China</div></div>
+        <div class="check-result" id="check-result-aws">0 de 5 confirmados</div>
+      </div>
+    </section>
+
+    <section class="block" id="aws-extracao">
+      <div class="sec-label">Parte 2 — Manuseio da interface</div>
+      <h2>Passo a passo de extração</h2>
+      <p class="sec-desc">Com as premissas confirmadas, siga os passos abaixo no AWS Console para configurar a exportação no formato <strong>FOCUS 1.0 with AWS columns</strong>.</p>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">1</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Acesse o Billing and Cost Management</h3>
+          <p>Faça login em <a href="https://console.aws.amazon.com" target="_blank">console.aws.amazon.com</a> e busque "Billing" na barra de pesquisa superior → selecione <strong>Billing and Cost Management</strong>.</p>
+          <div class="callout warn">Erro "You don't have permission to access billing information"? Volte à premissa 2 — acesso IAM ao billing.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">2</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Navegue até Data Exports</h3>
+          <p>No menu lateral, clique em <strong>Data Exports</strong> → botão <strong>Create export</strong> no topo.</p>
+          <div class="callout warn">Não aparece "Data Exports"? Confirme que o console está na região <strong>us-east-1</strong>. Se persistir, é falta da permissão <code>bcm-data-exports:ListExports</code>.</div>
+          <p>Não confunda com "Legacy exports → Cost and Usage Reports" — isso é o CUR antigo, não FOCUS.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">3</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Selecione o tipo de export</h3>
+          <p>Em "Export type", selecione <strong>Standard data export</strong> → Next.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">4</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Configure nome e tabela de dados</h3>
+          <p><strong>Export name:</strong> nome descritivo, até 128 caracteres (ex: <code>focus-export-mensal</code>).</p>
+          <p><strong>Table:</strong> selecione exatamente <code>FOCUS 1.0 with AWS columns</code>.</p>
+          <div class="callout warn">Existem outras tabelas (CUR 2.0, Carbon emissions) — confirme que selecionou a tabela FOCUS. Não há seleção de colunas: todas são incluídas automaticamente.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">5</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Configure opções de entrega</h3>
+          <p><strong>Refresh cadence:</strong> apenas "Daily" está disponível.</p>
+          <p><strong>File versioning:</strong> "Overwrite" (recomendado, economiza espaço) ou "Create new file".</p>
+          <p><strong>Formato:</strong></p>
+          <table class="mini-table">
+            <tr><th>Formato</th><th>Extensão</th><th>Recomendação</th></tr>
+            <tr><td>gzip – text/csv</td><td>.csv.gz</td><td>Recomendado — compatível com pipeline finops-focus</td></tr>
+            <tr><td>Parquet</td><td>.parquet</td><td>Alternativa para volumes muito grandes</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">6</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Configure o bucket S3 de destino</h3>
+          <p>Em "S3 bucket", selecione <strong>This account</strong> (obrigatório).</p>
+          <p><strong>Bucket novo:</strong> nome único globalmente, defina a região (recomendado us-east-1), revise a bucket policy e confirme.</p>
+          <p><strong>Bucket existente:</strong> selecione na lista — atenção, a policy atual será substituída.</p>
+          <p><strong>S3 path prefix:</strong> ex. <code>aws/focus</code> ou <code>billing/focus-exports</code>.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">7</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Revise e crie a exportação</h3>
+          <p>Confirme: Data table = <code>FOCUS 1.0 with AWS columns</code>, Compression correto, bucket correto → <strong>Create</strong>.</p>
+          <div class="callout">O status aparecerá como "Healthy" ou "Pending". Pode levar até <strong>24h</strong> para o primeiro arquivo ser entregue.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">8</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Execute manualmente (opcional)</h3>
+          <p>Para não esperar o ciclo diário: abra a exportação criada → <strong>Run export</strong> → aguarde status "Running" → "Healthy".</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">9</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Exporte dados históricos (backfill)</h3>
+          <p>Selecione a exportação → <strong>Export date range</strong> → defina o período → Run.</p>
+          <div class="callout">Backfill via console suporta até <strong>13 meses</strong>. Para períodos mais antigos, é necessário usar a API.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">10</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Localize e baixe o arquivo gerado</h3>
+          <p>No S3 Console, a estrutura segue:</p>
+          <pre>[bucket]/[prefixo]/[export-name]/data/
+  └── BILLING_PERIOD=YYYY-MM/
+        └── arquivo.csv.gz (ou .parquet)</pre>
+          <p>Ou via AWS CLI:</p>
+          <pre>aws s3 ls s3://[bucket]/[prefixo]/[export]/data/BILLING_PERIOD=YYYY-MM/
+aws s3 cp s3://[bucket]/[prefixo]/[export]/data/BILLING_PERIOD=YYYY-MM/ . --recursive</pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">11</div></div>
+        <div class="step-card">
+          <h3>Valide o arquivo recebido</h3>
+          <ul>
+            <li>Extensão <code>.csv.gz</code> ou <code>.parquet</code>, tamanho maior que 0 KB</li>
+            <li>Cabeçalho contém: <code>BillingPeriodStart</code>, <code>ChargePeriodStart</code>, <code>EffectiveCost</code>, <code>ProviderName</code>, <code>ChargeDescription</code></li>
+            <li><code>ProviderName</code> = <code>Amazon Web Services</code></li>
+          </ul>
+          <p>Verificar cabeçalho sem abrir o arquivo inteiro (Linux/macOS):</p>
+          <pre>zcat arquivo.csv.gz | head -1</pre>
+          <p>Windows (PowerShell, após descompactar):</p>
+          <pre>Get-Content "arquivo.csv" -TotalCount 1</pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="aws-faq">
+      <div class="sec-label">Parte 3 — Suporte</div>
+      <h2>Problemas frequentes</h2>
+      <p class="sec-desc">Bloqueios mais comuns e como resolvê-los.</p>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Não consigo acessar "Billing and Cost Management" <span class="faq-chevron">▾</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Acesso IAM ao billing desabilitado. O root da conta deve habilitar "IAM user and role access to Billing" nas configurações da conta.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">O menu "Data Exports" não aparece <span class="faq-chevron">▾</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Console em região diferente de us-east-1, ou falta de permissão. Troque a região; se persistir, solicite <code>bcm-data-exports:ListExports</code>.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">A tabela "FOCUS 1.0 with AWS columns" não aparece <span class="faq-chevron">▾</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Permissão insuficiente ou conta em região não suportada. Verifique permissões IAM e confirme que não está em GovCloud/China.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Erro "not authorized to perform bcm-data-exports:CreateExport" <span class="faq-chevron">▾</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Falta de permissão IAM. Solicite ao administrador a política <code>Billing</code> ou as permissões mínimas da premissa 3.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Erro ao configurar bucket S3: "not authorized to set bucket policy" <span class="faq-chevron">▾</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Falta de <code>s3:PutBucketPolicy</code>. Solicite ao administrador S3 que aplique a policy manualmente.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Export criado mas o arquivo nunca chega no S3 <span class="faq-chevron">▾</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Bucket policy incorreta ou bucket em outra conta. Verifique se a policy foi aplicada corretamente e se o bucket pertence à mesma conta.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Arquivo gerado sem campos FOCUS (schema diferente) <span class="faq-chevron">▾</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Tabela CUR 2.0 ou legacy selecionada por engano. Exclua o export e recrie selecionando "FOCUS 1.0 with AWS columns".</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Member Account não vê dados de outras contas <span class="faq-chevron">▾</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Limitação de design — member vê apenas seus próprios custos. Solicite à Management Account que crie o export consolidado.</div></div>
+      </div>
+    </section>
+
+    <section class="block" id="aws-enviar">
+      <div class="sec-label">Parte 4 — Finalização</div>
+      <h2>O que enviar à FinCodex</h2>
+      <div class="summary-card">
+        <p style="margin:0; font-size:14.5px; color:var(--text-secondary);">Após concluir a extração, envie os itens abaixo para o time responsável pela análise:</p>
+        <ul>
+          <li>Arquivo(s) <code>.csv.gz</code> ou <code>.parquet</code> — um por mês exportado</li>
+          <li>Período coberto (ex: <code>BILLING_PERIOD=2025-01</code> a <code>2025-06</code>)</li>
+          <li>Tipo de conta: Standalone / Management Account / Member Account</li>
+          <li>Nome do bucket e prefixo S3</li>
+          <li>Região do bucket (ex: us-east-1)</li>
+        </ul>
+      </div>
+      <div class="refs">
+        Referências oficiais AWS —
+        <a href="https://docs.aws.amazon.com/cur/latest/userguide/bcm-data-exports-access.html" target="_blank">IAM e permissões</a> ·
+        <a href="https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/control-access-billing.html" target="_blank">Habilitar acesso IAM ao billing</a> ·
+        <a href="https://docs.aws.amazon.com/cur/latest/userguide/dataexports-s3-bucket.html" target="_blank">Bucket S3 para Data Exports</a> ·
+        <a href="https://focus.finops.org" target="_blank">Especificação FOCUS</a>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- =====================  PAINEL AZURE  ========================= -->
+  <!-- ============================================================ -->
+  <div class="provider-panel" id="panel-azure" style="display:none">
+
+    <section class="block" id="azure-premissas">
+      <div class="sec-label">Parte 1 — Antes de começar</div>
+      <h2>Premissas de acesso</h2>
+      <p class="sec-desc">Confirme os itens abaixo antes de iniciar a extração. Os menus e permissões variam conforme o tipo de contrato Azure da organização.</p>
+
+      <div class="req-card" id="req-azure-1">
+        <div class="req-head" onclick="toggleReq('req-azure-1')">
+          <div class="req-num">1</div>
+          <div class="req-title">Identifique o tipo de contrato Azure da sua organização</div>
+          <svg class="req-chevron" width="16" height="16" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+        </div>
+        <div class="req-body"><div class="req-body-inner">
+          <table class="mini-table">
+            <tr><th>Tipo de contrato</th><th>Como identificar</th></tr>
+            <tr><td>EA — Enterprise Agreement</td><td>Contrato corporativo direto. "Enrollment Number" via <code>ea.azure.com</code> ou Cost Management + Billing</td></tr>
+            <tr><td>MCA — Microsoft Customer Agreement</td><td>Contrato digital mais recente. Seção "Perfil de cobrança" (Billing Profile) visível</td></tr>
+            <tr><td>PAYG — Pay-As-You-Go</td><td>Cartão de crédito, sem contrato corporativo. FOCUS <strong>não disponível</strong> para PAYG puro (MOSP)</td></tr>
+            <tr><td>CSP — Cloud Solution Provider</td><td>Gerido por parceiro/revendedor Microsoft. Extração feita pelo parceiro</td></tr>
+          </table>
+          <div class="callout">Acesse o <a href="https://portal.azure.com" target="_blank">portal Azure</a> → pesquise "Cost Management + Billing" → "Contas de cobrança". O tipo aparece na coluna "Tipo de acordo".</div>
+        </div></div>
+      </div>
+
+      <div class="req-card" id="req-azure-2">
+        <div class="req-head" onclick="toggleReq('req-azure-2')">
+          <div class="req-num">2</div>
+          <div class="req-title">Verifique seu papel (role) no Cost Management</div>
+          <svg class="req-chevron" width="16" height="16" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+        </div>
+        <div class="req-body"><div class="req-body-inner">
+          <p>Acesse "Cost Management + Billing" → <strong>Controle de acesso (IAM)</strong> no escopo desejado → <strong>Exibir meu acesso</strong>.</p>
+          <table class="mini-table">
+            <tr><th>Papel</th><th>Vê custos</th><th>Cria exportações</th><th>Configura Storage</th></tr>
+            <tr><td>Owner</td><td>✅</td><td>✅</td><td>✅</td></tr>
+            <tr><td>Contributor</td><td>✅</td><td>✅ (próprias)</td><td>✅</td></tr>
+            <tr><td>Cost Management Contributor</td><td>✅</td><td>✅</td><td>❌</td></tr>
+            <tr><td>Cost Management Reader</td><td>✅</td><td>Só agenda</td><td>❌</td></tr>
+            <tr><td>Reader</td><td>✅</td><td>❌</td><td>❌</td></tr>
+          </table>
+          <div class="callout"><strong>Mínimo recomendado:</strong> <code>Cost Management Contributor</code> no escopo de cobrança, mais <code>Storage Blob Data Contributor</code> na conta de armazenamento de destino.</div>
+        </div></div>
+      </div>
+
+      <div class="req-card" id="req-azure-3">
+        <div class="req-head" onclick="toggleReq('req-azure-3')">
+          <div class="req-num">3</div>
+          <div class="req-title">Acesso à conta de armazenamento (Storage Account)</div>
+          <svg class="req-chevron" width="16" height="16" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+        </div>
+        <div class="req-body"><div class="req-body-inner">
+          <p>O arquivo é gravado em Azure Blob Storage — é preciso permissão de escrita.</p>
+          <p><strong>Storage novo:</strong> papel Contributor ou Owner na assinatura.<br>
+          <strong>Storage existente:</strong> papel Storage Blob Data Contributor na conta específica.<br>
+          <strong>Storage em assinatura diferente do billing:</strong> Cost Management Contributor na origem + Owner (ou <code>Microsoft.Authorization/roleAssignments/write</code>) no destino.</p>
+          <p>Verifique em: Contas de armazenamento → conta desejada → Controle de acesso (IAM) → Exibir meu acesso.</p>
+        </div></div>
+      </div>
+
+      <div class="req-card" id="req-azure-4">
+        <div class="req-head" onclick="toggleReq('req-azure-4')">
+          <div class="req-num">4</div>
+          <div class="req-title">Visualização de custos habilitada (EA e MCA)</div>
+          <svg class="req-chevron" width="16" height="16" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+        </div>
+        <div class="req-body"><div class="req-body-inner">
+          <p>Em EA/MCA um administrador pode bloquear a visualização de custos para usuários comuns — se você acessa o Cost Management mas só vê traços/zeros, este é o bloqueio.</p>
+          <p><strong>EA:</strong> apenas o EA Administrator habilita, via <code>ea.azure.com</code> → Manage → Enrollment → Policies → confirme "AO view charges" e "DA view charges" como Enabled.</p>
+          <p><strong>MCA:</strong> Cost Management + Billing → Contas de cobrança → Políticas → confirme "Visualização de cobranças" habilitada.</p>
+        </div></div>
+      </div>
+
+      <div class="req-card" id="req-azure-5">
+        <div class="req-head" onclick="toggleReq('req-azure-5')">
+          <div class="req-num">5</div>
+          <div class="req-title">Disponibilidade do FOCUS no seu ambiente</div>
+          <svg class="req-chevron" width="16" height="16" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+        </div>
+        <div class="req-body"><div class="req-body-inner">
+          <table class="mini-table">
+            <tr><th>Tipo de contrato</th><th>Suporta FOCUS</th><th>Observação</th></tr>
+            <tr><td>EA</td><td style="color:var(--brand-success); font-weight:700;">Sim</td><td>Todos os escopos, exceto Management Group</td></tr>
+            <tr><td>MCA</td><td style="color:var(--brand-success); font-weight:700;">Sim</td><td>Billing Account, Billing Profile, Invoice Section, Subscription, Resource Group</td></tr>
+            <tr><td>PAYG (MOSP)</td><td style="color:var(--brand-error); font-weight:700;">Não</td><td>Não disponível</td></tr>
+            <tr><td>CSP (via parceiro)</td><td style="color:var(--brand-success); font-weight:700;">Sim</td><td>Somente o parceiro gera; cliente recebe o arquivo</td></tr>
+            <tr><td>Management Group</td><td style="color:var(--brand-error); font-weight:700;">Não</td><td>Escopo não suportado</td></tr>
+          </table>
+          <div class="callout warn">Se o ambiente é PAYG ou o escopo é Management Group, avalie alternativas — ex: exportar por assinatura individualmente.</div>
+        </div></div>
+      </div>
+
+      <div class="checklist" style="margin-top:28px;">
+        <div style="font-weight:700; margin-bottom:14px; font-size:15px;">Self-check antes de prosseguir</div>
+        <div class="check-item"><div class="check-box" onclick="toggleCheck(this)"></div><div>Sei o tipo de contrato Azure da minha organização (EA ou MCA)</div></div>
+        <div class="check-item"><div class="check-box" onclick="toggleCheck(this)"></div><div>Tenho papel <code>Cost Management Contributor</code> ou superior no escopo de billing</div></div>
+        <div class="check-item"><div class="check-box" onclick="toggleCheck(this)"></div><div>Tenho acesso de escrita (<code>Storage Blob Data Contributor</code>) em uma conta de armazenamento</div></div>
+        <div class="check-item"><div class="check-box" onclick="toggleCheck(this)"></div><div>A visualização de custos está habilitada no meu perfil</div></div>
+        <div class="check-item"><div class="check-box" onclick="toggleCheck(this)"></div><div>Meu tipo de contrato suporta exportação FOCUS (EA ou MCA)</div></div>
+        <div class="check-result" id="check-result-azure">0 de 5 confirmados</div>
+      </div>
+    </section>
+
+    <section class="block" id="azure-extracao">
+      <div class="sec-label">Parte 2 — Manuseio da interface</div>
+      <h2>Passo a passo de extração</h2>
+      <p class="sec-desc">Com as premissas confirmadas, siga os passos abaixo no portal Azure para configurar a exportação com o template <strong>Cost and usage details (FOCUS)</strong>.</p>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">1</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Acesse o Cost Management no portal Azure</h3>
+          <p>Faça login em <a href="https://portal.azure.com" target="_blank">portal.azure.com</a>, pesquise "Cost Management" → selecione <strong>Cost Management + Billing</strong> → menu lateral → <strong>Cost Management</strong>.</p>
+          <div class="callout">Se houver múltiplas assinaturas/contas de cobrança, escolha o escopo com o maior volume de dados a exportar (preferencialmente a conta de cobrança principal).</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">2</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Navegue até Exportações</h3>
+          <p>No menu lateral do Cost Management, clique em <strong>Exports</strong> → botão <strong>+ Create</strong>.</p>
+          <div class="callout warn">Não encontra "Exports"? Seu papel atual não tem permissão para criar exportações. Volte à premissa 2.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">3</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Selecione o template FOCUS</h3>
+          <p>Na aba "Basics", localize o template <strong>"Cost and usage details (FOCUS)"</strong> → selecione → Next.</p>
+          <div class="callout warn">Não aparece? Clique em "Show more" para expandir as opções. Se ainda assim não aparecer, o contrato pode ser PAYG/MOSP — volte à premissa 5.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">4</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Configure os detalhes (aba Datasets)</h3>
+          <table class="mini-table">
+            <tr><th>Campo</th><th>Valor recomendado</th></tr>
+            <tr><td>Export prefix</td><td><code>focus-export</code> ou nome do projeto/cliente</td></tr>
+            <tr><td>Type of data</td><td>Cost and usage details (FOCUS) — preenchido pelo template</td></tr>
+            <tr><td>Dataset version</td><td>Versão mais recente disponível</td></tr>
+            <tr><td>Frequency</td><td>Monthly export of last month's costs</td></tr>
+          </table>
+          <div class="callout">Para dados históricos, use <strong>"One-time export"</strong> com o período desejado. Para dados correntes, use "Monthly export".</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">5</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Configure o destino (aba Destination)</h3>
+          <p><strong>Storage novo:</strong> Storage type = Azure blob storage → selecione subscription → resource group → crie o storage account (nome sem espaços, minúsculo) → região → container (ex: <code>billing-focus</code>) → directory (ex: <code>azure/exports</code>).</p>
+          <p><strong>Storage existente:</strong> selecione subscription → storage account na lista → container → directory.</p>
+          <table class="mini-table">
+            <tr><th>Campo</th><th>Valor para finops-focus</th></tr>
+            <tr><td>Format</td><td>CSV ✅ (recomendado)</td></tr>
+            <tr><td>Compression</td><td>Gzip (arquivos grandes) ou None</td></tr>
+          </table>
+          <p>File partitioning e Overwrite data já vêm habilitados por padrão — não é necessário alterar.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">6</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Revise e crie a exportação</h3>
+          <p>Na aba "Review + create", confirme <strong>Type of data = Cost and usage details (FOCUS)</strong>, o Storage Account e container → <strong>Create</strong>.</p>
+          <div class="callout">Status aparecerá como "Enabled". A exportação agendada rodará automaticamente no próximo ciclo.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">7</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Execute imediatamente (opcional)</h3>
+          <p>Clique na exportação criada → <strong>Run now</strong> → aguarde "Em execução" → "Concluído".</p>
+          <div class="callout">Pode levar de minutos até 24h, dependendo do volume.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">8</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Exporte meses históricos (backfill)</h3>
+          <p>Selecione a exportação → <strong>Export selected dates</strong> → escolha um mês por vez → Run. Repita para cada mês desejado.</p>
+          <div class="callout">Via portal, suporta até 13 meses. Para períodos maiores, é necessário usar a REST API do Azure.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">9</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Localize e baixe o arquivo gerado</h3>
+          <p>Storage accounts → conta de destino → Containers → navegue até a pasta configurada:</p>
+          <pre>[container]/[directory]/[export-name]/[YYYYMMDD-YYYYMMDD]/[RunID]/</pre>
+          <p>Localize os arquivos <code>.csv</code>/<code>.csv.gz</code> e o <code>manifest.json</code> → Download.</p>
+          <p>Para volumes maiores, use o <a href="https://azure.microsoft.com/products/storage/storage-explorer/" target="_blank">Azure Storage Explorer</a>.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">10</div></div>
+        <div class="step-card">
+          <h3>Valide o arquivo recebido</h3>
+          <ul>
+            <li>Extensão <code>.csv</code> ou <code>.csv.gz</code>, tamanho maior que 0 KB</li>
+            <li>Cabeçalho contém: <code>BillingPeriodStart</code>, <code>ChargePeriodStart</code>, <code>EffectiveCost</code>, <code>ProviderName</code>, <code>ChargeDescription</code></li>
+            <li>Se particionado, o <code>manifest.json</code> está presente na mesma pasta</li>
+          </ul>
+          <p>Windows (PowerShell):</p>
+          <pre>Get-Content "arquivo.csv" -TotalCount 1</pre>
+          <div class="callout warn">Campos diferentes dos esperados? O template pode ter sido "Actual"/"Amortized" em vez de FOCUS. Volte ao passo 3.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="azure-faq">
+      <div class="sec-label">Parte 3 — Suporte</div>
+      <h2>Problemas frequentes</h2>
+      <p class="sec-desc">Bloqueios mais comuns e como resolvê-los.</p>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Opção "Exports" não aparece no menu <span class="faq-chevron">▾</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Sem permissão de Cost Management. Solicite <code>Cost Management Contributor</code> ao administrador.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Template FOCUS não aparece <span class="faq-chevron">▾</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Contrato PAYG ou escopo Management Group. Verifique o tipo de contrato — FOCUS não disponível para PAYG.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Exportação criada mas não gera arquivo <span class="faq-chevron">▾</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Permissão insuficiente no Storage Account. Solicite <code>Storage Blob Data Contributor</code> na conta de armazenamento.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Arquivo gerado mas campos FOCUS estão ausentes <span class="faq-chevron">▾</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Template incorreto selecionado. Exclua e recrie com o template "Cost and usage details (FOCUS)".</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Arquivo particionado em múltiplos arquivos pequenos <span class="faq-chevron">▾</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Comportamento padrão do Azure para volumes maiores. Normal — use o <code>manifest.json</code> para identificar todas as partes.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Erro 401 Unauthorized com Storage atrás de firewall <span class="faq-chevron">▾</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Falta de permissão para identidade gerenciada. Solicite role com <code>Microsoft.Authorization/roleAssignments/write</code> no Storage Account.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Cost Management mostra valores zerados ou traços <span class="faq-chevron">▾</span></div>
+        <div class="faq-a"><div class="faq-a-inner">"View charges" desabilitado no contrato EA/MCA. Solicite ao EA Administrator que habilite "AO view charges".</div></div>
+      </div>
+    </section>
+
+    <section class="block" id="azure-enviar">
+      <div class="sec-label">Parte 4 — Finalização</div>
+      <h2>O que enviar à FinCodex</h2>
+      <div class="summary-card">
+        <p style="margin:0; font-size:14.5px; color:var(--text-secondary);">Após concluir a extração, envie os itens abaixo para o time responsável pela análise:</p>
+        <ul>
+          <li>Arquivo(s) <code>.csv</code> ou <code>.csv.gz</code> — um ou mais por mês exportado</li>
+          <li><code>manifest.json</code> — índice das partes, se particionado</li>
+          <li>Período coberto (ex: "Janeiro a Junho de 2025")</li>
+          <li>Tipo de contrato: EA ou MCA</li>
+          <li>Escopo utilizado (ex: "Subscription: prod-subscription-001")</li>
+        </ul>
+      </div>
+      <div class="refs">
+        Referências oficiais Microsoft —
+        <a href="https://learn.microsoft.com/azure/cost-management-billing/costs/understand-work-scopes" target="_blank">Escopos e permissões</a> ·
+        <a href="https://learn.microsoft.com/azure/cost-management-billing/costs/assign-access-acm-data" target="_blank">Atribuição de acesso</a> ·
+        <a href="https://learn.microsoft.com/azure/cost-management-billing/costs/tutorial-improved-exports" target="_blank">Exportações aprimoradas</a> ·
+        <a href="https://focus.finops.org" target="_blank">Especificação FOCUS</a>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- ======================  PAINEL GCP  ========================= -->
+  <!-- ============================================================ -->
+  <div class="provider-panel" id="panel-gcp" style="display:none">
+
+    <section class="block" id="gcp-premissas">
+      <div class="sec-label">Parte 1 — Antes de começar</div>
+      <h2>Premissas de acesso</h2>
+      <p class="sec-desc">O GCP funciona de forma diferente dos demais provedores: o export FOCUS não gera arquivos diretamente — os dados chegam em uma tabela no <strong>BigQuery</strong> e precisam ser extraídos para o <strong>Google Cloud Storage (GCS)</strong> antes do download.</p>
+
+      <div class="callout warn"><strong>Status atual:</strong> o export FOCUS do GCP está em <strong>Preview</strong> (pré-disponibilidade geral), sujeito aos termos de pré-GA. Para uso em produção, considere esse contexto.</div>
+
+      <div class="callout">O processo envolve três camadas: <strong>Cloud Billing account</strong> (onde o export é habilitado) → <strong>Projeto GCP + BigQuery</strong> (onde os dados chegam, dataset imutável) → <strong>Google Cloud Storage</strong> (bucket para extração dos arquivos CSV).</div>
+
+      <div class="req-card" id="req-gcp-1">
+        <div class="req-head" onclick="toggleReq('req-gcp-1')">
+          <div class="req-num">1</div>
+          <div class="req-title">Identifique sua estrutura de conta GCP</div>
+          <svg class="req-chevron" width="16" height="16" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+        </div>
+        <div class="req-body"><div class="req-body-inner">
+          <table class="mini-table">
+            <tr><th>Elemento</th><th>Descrição</th><th>Como identificar</th></tr>
+            <tr><td>Cloud Billing account</td><td>Conta responsável pelo pagamento</td><td>Console GCP → "Billing" → nome da conta no topo</td></tr>
+            <tr><td>Google Cloud Organization</td><td>Estrutura corporativa que agrupa projetos</td><td>Menu IAM → se mostrar "Organization"</td></tr>
+            <tr><td>Projeto GCP</td><td>Container de recursos; precisa de um projeto dedicado para o dataset</td><td>Seletor de projetos no topo</td></tr>
+            <tr><td>Workspace / Identity</td><td>Usuários são identidades Google</td><td>Ícone de perfil no canto superior direito</td></tr>
+          </table>
+          <div class="callout"><strong>Recomendação do Google:</strong> crie um projeto GCP dedicado exclusivamente para billing e FinOps, vinculado à mesma Cloud Billing account cujos dados você quer exportar.</div>
+        </div></div>
+      </div>
+
+      <div class="req-card" id="req-gcp-2">
+        <div class="req-head" onclick="toggleReq('req-gcp-2')">
+          <div class="req-num">2</div>
+          <div class="req-title">Permissões na Cloud Billing Account</div>
+          <svg class="req-chevron" width="16" height="16" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+        </div>
+        <div class="req-body"><div class="req-body-inner">
+          <p>O export FOCUS é habilitado diretamente na <strong>Cloud Billing account</strong> — não no projeto GCP.</p>
+          <table class="mini-table">
+            <tr><th>Papel</th><th>Habilita export FOCUS</th></tr>
+            <tr><td>Billing Account Administrator</td><td style="color:var(--brand-success); font-weight:700;">Sim</td></tr>
+            <tr><td>Billing Account Costs Manager</td><td style="color:var(--brand-success); font-weight:700;">Sim (papel mínimo)</td></tr>
+            <tr><td>Billing Account Viewer</td><td style="color:var(--brand-error); font-weight:700;">Não</td></tr>
+          </table>
+          <p>Verifique em: Billing → conta desejada → Account management → Manage billing account users / Permissions.</p>
+        </div></div>
+      </div>
+
+      <div class="req-card" id="req-gcp-3">
+        <div class="req-head" onclick="toggleReq('req-gcp-3')">
+          <div class="req-num">3</div>
+          <div class="req-title">Permissões no projeto GCP (BigQuery)</div>
+          <svg class="req-chevron" width="16" height="16" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+        </div>
+        <div class="req-body"><div class="req-body-inner">
+          <table class="mini-table">
+            <tr><th>Papel</th><th>Necessário para</th><th>Onde aplicar</th></tr>
+            <tr><td><code>roles/resourcemanager.projectIamAdmin</code></td><td>Gerenciar permissões do projeto</td><td>Projeto GCP</td></tr>
+            <tr><td><code>roles/bigquery.admin</code></td><td>Criar e acessar o dataset FOCUS imutável</td><td>Projeto GCP</td></tr>
+            <tr><td><code>roles/resourcemanager.projectCreator</code></td><td>Criar projeto dedicado (se necessário)</td><td>Organização ou Pasta</td></tr>
+          </table>
+          <div class="callout">Se for usar um projeto GCP já existente, <code>Project IAM Admin</code> e <code>BigQuery Admin</code> naquele projeto já são suficientes.</div>
+        </div></div>
+      </div>
+
+      <div class="req-card" id="req-gcp-4">
+        <div class="req-head" onclick="toggleReq('req-gcp-4')">
+          <div class="req-num">4</div>
+          <div class="req-title">Billing habilitado no projeto GCP</div>
+          <svg class="req-chevron" width="16" height="16" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+        </div>
+        <div class="req-body"><div class="req-body-inner">
+          <p>O projeto escolhido para conter o dataset BigQuery precisa estar vinculado à <strong>mesma Cloud Billing account</strong> cujos dados serão exportados.</p>
+          <p>Verifique em: selecione o projeto → menu "Billing" → confirme que aparece o nome da sua Cloud Billing account.</p>
+          <div class="callout warn">Se aparecer "Billing is disabled" ou uma conta diferente, acione um <strong>Billing Account Administrator</strong> para vincular o projeto corretamente.</div>
+        </div></div>
+      </div>
+
+      <div class="req-card" id="req-gcp-5">
+        <div class="req-head" onclick="toggleReq('req-gcp-5')">
+          <div class="req-num">5</div>
+          <div class="req-title">BigQuery API habilitada</div>
+          <svg class="req-chevron" width="16" height="16" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+        </div>
+        <div class="req-body"><div class="req-body-inner">
+          <p>Com o projeto correto selecionado, pesquise "BigQuery API" na barra superior. Se aparecer "Enable", a API ainda não está ativa; se aparecer "Manage", já está habilitada.</p>
+          <div class="callout">Não precisa habilitar manualmente antes — o console pergunta e permite habilitar durante a própria configuração do export FOCUS.</div>
+        </div></div>
+      </div>
+
+      <div class="req-card" id="req-gcp-6">
+        <div class="req-head" onclick="toggleReq('req-gcp-6')">
+          <div class="req-num">6</div>
+          <div class="req-title">Disponibilidade do export FOCUS no seu ambiente</div>
+          <svg class="req-chevron" width="16" height="16" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+        </div>
+        <div class="req-body"><div class="req-body-inner">
+          <table class="mini-table">
+            <tr><th>Condição</th><th>Disponibilidade</th></tr>
+            <tr><td>Conta Google Cloud padrão (paga)</td><td style="color:var(--brand-success); font-weight:700;">Sim (Preview)</td></tr>
+            <tr><td>Google Workspace como identidade</td><td style="color:var(--brand-success); font-weight:700;">Sim — recomendado</td></tr>
+            <tr><td>Conta pessoal Gmail</td><td style="color:var(--brand-warning); font-weight:700;">Limitado</td></tr>
+            <tr><td>Multi-region (US ou EU) — localização do dataset</td><td style="color:var(--brand-success); font-weight:700;">Recomendado — habilita backfill automático</td></tr>
+            <tr><td>Região específica (ex: southamerica-east1)</td><td style="color:var(--brand-warning); font-weight:700;">Sem backfill retroativo</td></tr>
+          </table>
+          <div class="callout">Escolhendo <strong>US</strong> ou <strong>EU</strong> como localização do dataset, o Google carrega automaticamente os dados do mês anterior ao habilitar o export.</div>
+        </div></div>
+      </div>
+
+      <div class="checklist" style="margin-top:28px;">
+        <div style="font-weight:700; margin-bottom:14px; font-size:15px;">Self-check antes de prosseguir</div>
+        <div class="check-item"><div class="check-box" onclick="toggleCheck(this)"></div><div>Sei qual é minha Cloud Billing account e tenho papel <code>Billing Account Costs Manager</code> ou superior</div></div>
+        <div class="check-item"><div class="check-box" onclick="toggleCheck(this)"></div><div>Tenho (ou posso criar) um projeto GCP vinculado a essa billing account</div></div>
+        <div class="check-item"><div class="check-box" onclick="toggleCheck(this)"></div><div>Tenho papel <code>BigQuery Admin</code> no projeto GCP de destino</div></div>
+        <div class="check-item"><div class="check-box" onclick="toggleCheck(this)"></div><div>O billing está habilitado no projeto e vinculado à billing account correta</div></div>
+        <div class="check-item"><div class="check-box" onclick="toggleCheck(this)"></div><div>Escolhi (ou vou escolher) localização multi-region (US ou EU) para o dataset</div></div>
+        <div class="check-result" id="check-result-gcp">0 de 5 confirmados</div>
+      </div>
+    </section>
+
+    <section class="block" id="gcp-extracao">
+      <div class="sec-label">Parte 2 — Manuseio da interface</div>
+      <h2>Passo a passo de extração</h2>
+      <p class="sec-desc">O processo tem duas partes: <strong>habilitar</strong> o export FOCUS no BigQuery (passos 1–6) e depois <strong>extrair</strong> os dados do BigQuery para arquivos CSV no Google Cloud Storage (passos 7–10).</p>
+
+      <div class="callout">Fluxo completo: Billing → Billing export → Enable FOCUS export → dataset BigQuery imutável (<code>gcp_billing_export_focus_&lt;BILLING_ACCOUNT_ID&gt;</code>) → exportar para GCS → arquivo <code>.csv.gz</code>.</div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">1</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Acesse o console GCP e selecione o projeto correto</h3>
+          <p>Faça login em <a href="https://console.cloud.google.com" target="_blank">console.cloud.google.com</a> e, no seletor de projetos (topo), selecione o projeto dedicado para billing/FinOps — crie um novo se não existir.</p>
+          <p>Confirme que o billing está habilitado nesse projeto (premissa 4).</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">2</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Acesse a página de Billing Export</h3>
+          <p>Menu (☰) → <strong>Billing</strong> → selecione a billing account correta → menu lateral → <strong>Billing export</strong> → aba <strong>"BigQuery export"</strong>.</p>
+          <div class="callout warn">Não encontra "Billing export"? Permissão insuficiente na billing account — volte à premissa 2.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">3</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Habilite o export FOCUS</h3>
+          <p>Na aba "BigQuery export", localize <strong>"FOCUS usage cost"</strong> → clique em <strong>"Enable FOCUS export"</strong>.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">4</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Configure o projeto e a localização do dataset</h3>
+          <p><strong>Projects:</strong> selecione o projeto onde o dataset será criado (o mesmo do passo 1). Se a BigQuery API não estiver ativa, clique em "Enable BigQuery API".</p>
+          <table class="mini-table">
+            <tr><th>Localização</th><th>Backfill automático</th></tr>
+            <tr><td>US (multi-region)</td><td style="color:var(--brand-success); font-weight:700;">Sim — mês anterior</td></tr>
+            <tr><td>EU (multi-region)</td><td style="color:var(--brand-success); font-weight:700;">Sim — mês anterior</td></tr>
+            <tr><td>Região específica</td><td style="color:var(--brand-error); font-weight:700;">Não</td></tr>
+          </table>
+          <div class="callout warn">A localização do dataset <strong>não pode ser alterada</strong> após a criação. Escolha com cuidado, depois clique em <strong>"Save"</strong>.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">5</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Aguarde a criação do dataset e a chegada dos dados</h3>
+          <p>Nomenclatura gerada pelo Google:</p>
+          <pre>Dataset: gcp_billing_immutable_&lt;BILLING_ACCOUNT_ID&gt;_&lt;location&gt;
+Tabela:  gcp_billing_export_focus_&lt;BILLING_ACCOUNT_ID&gt;</pre>
+          <div class="callout">Pode levar algumas horas até os primeiros dados aparecerem. Backfill do mês anterior (multi-region) pode levar até <strong>5 dias</strong> para completar.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">6</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Confirme que os dados estão no BigQuery</h3>
+          <p>Menu (☰) → <strong>BigQuery</strong> → Explorer → expanda o projeto → localize o dataset <code>gcp_billing_immutable_...</code> → tabela <code>gcp_billing_export_focus_...</code> → <strong>Preview</strong>.</p>
+          <p>Confirme os campos: <code>BillingPeriodStart</code>, <code>EffectiveCost</code>, <code>ProviderName</code>.</p>
+          <div class="callout warn">Dataset não aparece? Aguarde mais tempo (até 5h para os primeiros dados). Após 24h sem aparecer, revise permissões e se o export está habilitado.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">7</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Crie um bucket no Google Cloud Storage (GCS)</h3>
+          <p>Menu (☰) → <strong>Cloud Storage → Buckets → Create</strong>. Nome (ex: <code>billing-focus-export-[projeto]</code>), mesma região do dataset (ou multi-region compatível) → mantenha o restante padrão → <strong>Create</strong>.</p>
+          <p>Se já existir um bucket disponível no mesmo projeto, pode reutilizá-lo com uma pasta/prefixo dedicado.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">8</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Exporte a tabela BigQuery para o bucket GCS</h3>
+          <p><strong>Opção A — console (períodos completos):</strong> na tabela <code>gcp_billing_export_focus_...</code> → ⋮ → Export → Export to GCS → informe o caminho do bucket, formato CSV, compressão GZIP → Export.</p>
+          <p><strong>Opção B — SQL (filtrar por período):</strong></p>
+          <pre>EXPORT DATA OPTIONS(
+  uri='gs://[bucket]/focus/[YYYY-MM]/*.csv.gz',
+  format='CSV',
+  compression='GZIP',
+  overwrite=true,
+  header=true
+) AS
+SELECT * FROM `[projeto].[dataset].gcp_billing_export_focus_[BILLING_ACCOUNT_ID]`
+WHERE BillingPeriodStart >= '2025-01-01'
+  AND BillingPeriodStart &lt; '2025-07-01'
+ORDER BY BillingPeriodStart;</pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">9</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Baixe os arquivos do bucket GCS</h3>
+          <p>Menu (☰) → <strong>Cloud Storage → Buckets</strong> → navegue até a pasta exportada → selecione os <code>.csv.gz</code> → <strong>Download</strong>.</p>
+          <p>Via <code>gsutil</code>:</p>
+          <pre>gsutil -m cp gs://[bucket]/focus/[YYYY-MM]/*.csv.gz ./focus-[YYYY-MM]/
+gsutil -m cp -r gs://[bucket]/focus/ ./focus-local/</pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">10</div></div>
+        <div class="step-card">
+          <h3>Valide os arquivos recebidos</h3>
+          <ul>
+            <li>Extensão <code>.csv.gz</code>, tamanho maior que 0 KB</li>
+            <li>Cabeçalho contém: <code>BillingPeriodStart</code>, <code>ChargePeriodStart</code>, <code>EffectiveCost</code>, <code>ProviderName</code>, <code>ChargeDescription</code></li>
+            <li><code>ProviderName</code> = <code>Google</code></li>
+          </ul>
+          <p>Linux/macOS:</p>
+          <pre>zcat arquivo.csv.gz | head -1</pre>
+          <p>Windows (PowerShell, após descompactar):</p>
+          <pre>Get-Content "arquivo.csv" -TotalCount 1</pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="gcp-faq">
+      <div class="sec-label">Parte 3 — Suporte</div>
+      <h2>Problemas frequentes</h2>
+      <p class="sec-desc">Bloqueios mais comuns e como resolvê-los.</p>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Não encontro "Billing export" no menu <span class="faq-chevron">▾</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Sem permissão na billing account. Solicite papel <code>Billing Account Costs Manager</code> ao administrador.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Opção "Enable FOCUS export" não aparece <span class="faq-chevron">▾</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Papel insuficiente ou export já habilitado. Verifique se já existe um export ativo; senão, solicite <code>Billing Account Costs Manager</code>.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Dataset BigQuery não aparece após habilitar <span class="faq-chevron">▾</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Ainda processando — pode levar horas. Aguarde até 24h; se persistir, verifique projeto e permissões do BigQuery.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Erro "Permission denied" ao exportar para GCS <span class="faq-chevron">▾</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Sem permissão de escrita no bucket. Solicite papel <code>Storage Object Creator</code> no bucket GCS ao administrador.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Dados exportados mas sem campos FOCUS <span class="faq-chevron">▾</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Exportou a tabela errada. Confirme que o dataset contém "gcp_billing_immutable" no nome e a tabela começa com "gcp_billing_export_focus_".</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Backfill não chegou (dados só a partir de hoje) <span class="faq-chevron">▾</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Dataset em região específica, não multi-region. Para backfill automático é necessário US ou EU; para outras regiões, exporte manualmente com filtro SQL por período.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Export desabilitado acidentalmente — dados perdidos? <span class="faq-chevron">▾</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Se reabilitar no mesmo projeto/região, os dados anteriores ao disable continuam disponíveis. Se mudar projeto/região, os dados do período sem export são perdidos.</div></div>
+      </div>
+    </section>
+
+    <section class="block" id="gcp-enviar">
+      <div class="sec-label">Parte 4 — Finalização</div>
+      <h2>O que enviar à FinCodex</h2>
+      <div class="summary-card">
+        <p style="margin:0; font-size:14.5px; color:var(--text-secondary);">Após concluir a extração, envie os itens abaixo para o time responsável pela análise:</p>
+        <ul>
+          <li>Arquivo(s) <code>.csv.gz</code> — um ou mais por período exportado</li>
+          <li>Período coberto (ex: "Janeiro a Junho de 2025")</li>
+          <li>ID da Cloud Billing account (ex: <code>010101-F0FFF0-61C528</code>)</li>
+          <li>Nome do projeto GCP que contém o dataset BigQuery</li>
+          <li>Localização do dataset (ex: US, EU ou southamerica-east1)</li>
+        </ul>
+      </div>
+      <div class="refs">
+        Referências oficiais Google —
+        <a href="https://docs.cloud.google.com/billing/docs/how-to/export-data-bigquery-focus-setup" target="_blank">Configurar export FOCUS</a> ·
+        <a href="https://docs.cloud.google.com/billing/docs/how-to/billing-access" target="_blank">Controle de acesso ao Billing</a> ·
+        <a href="https://docs.cloud.google.com/bigquery/docs/exporting-data" target="_blank">Exportar dados do BigQuery</a> ·
+        <a href="https://focus.finops.org" target="_blank">Especificação FOCUS</a>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- ======================  PAINEL OCI  ========================= -->
+  <!-- ============================================================ -->
+  <div class="provider-panel" id="panel-oci" style="display:none">
+
+    <section class="block" id="oci-premissas">
+      <div class="sec-label">Parte 1 — Antes de começar</div>
+      <h2>Premissas de acesso</h2>
+      <p class="sec-desc">A OCI funciona de forma diferente dos demais provedores: os relatórios FOCUS <strong>não precisam ser configurados</strong>. A Oracle os gera automaticamente a cada ~6 horas e os armazena em um bucket de Object Storage gerenciado pela própria Oracle — não pelo cliente.</p>
+
+      <div class="callout">O que você precisa fazer é apenas configurar uma <strong>policy IAM de cross-tenancy</strong> para que os usuários do seu tenancy possam ler esses arquivos a partir do tenancy da Oracle. Sem essa policy, o menu existe no console, mas os arquivos não ficam acessíveis para download.</div>
+
+      <div class="req-card" id="req-oci-1">
+        <div class="req-head" onclick="toggleReq('req-oci-1')">
+          <div class="req-num">1</div>
+          <div class="req-title">Identifique seu tipo de tenancy e acesso</div>
+          <svg class="req-chevron" width="16" height="16" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+        </div>
+        <div class="req-body"><div class="req-body-inner">
+          <table class="mini-table">
+            <tr><th>Tipo de acesso</th><th>Descrição</th><th>Impacto</th></tr>
+            <tr><td>Tenancy comercial (padrão)</td><td>Conta OCI padrão, cobrança por uso</td><td>Relatórios FOCUS disponíveis em todas as regiões comerciais</td></tr>
+            <tr><td>Tenancy Government / Sovereign</td><td>Regiões isoladas (OC2, OC3, OC4)</td><td>FOCUS pode não estar disponível em todas as regiões soberanas</td></tr>
+            <tr><td>Tenancy de teste / Free Tier</td><td>Tenancies não faturados</td><td>Relatórios de custo não disponíveis</td></tr>
+            <tr><td>Child tenancy (via Organization)</td><td>Tenancy filho de uma OCI Organization</td><td>Cada tenancy tem seus próprios relatórios — sem consolidação automática</td></tr>
+          </table>
+          <div class="callout">Acesse o <a href="https://cloud.oracle.com" target="_blank">OCI Console</a> → menu superior direito → nome do tenancy → verifique se aparece "Paid" ou "Free Trial" no status da conta.</div>
+        </div></div>
+      </div>
+
+      <div class="req-card" id="req-oci-2">
+        <div class="req-head" onclick="toggleReq('req-oci-2')">
+          <div class="req-num">2</div>
+          <div class="req-title">Policy IAM de cross-tenancy configurada</div>
+          <svg class="req-chevron" width="16" height="16" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+        </div>
+        <div class="req-body"><div class="req-body-inner">
+          <p>Este é o requisito mais importante e o bloqueio mais comum na OCI. Os relatórios ficam em um bucket <strong>da Oracle</strong> — sem esta policy, o download é negado.</p>
+          <p>A policy deve ser criada no <strong>compartimento raiz (root)</strong> do tenancy:</p>
+          <pre>define tenancy usage-report as ocid1.tenancy.oc1..aaaaaaaaned4fkpkisbwjlr56u7cj63lf3wffbilvqknstgtvzub7vhqkggq
+endorse group &lt;nome_do_grupo&gt; to read objects in tenancy usage-report</pre>
+          <div class="callout warn">Não altere o OCID da primeira linha — é o identificador do tenancy Oracle que armazena os relatórios. Substitua apenas <code>&lt;nome_do_grupo&gt;</code> pelo grupo IAM do seu usuário.</div>
+          <p><strong>Como verificar se já existe:</strong> Identity & Security → Policies → selecione o compartimento raiz → procure por uma policy com <code>endorse group</code> e <code>tenancy usage-report</code>.</p>
+          <p><strong>Como testar se está funcionando:</strong> Billing & Cost Management → Cost and Usage Reports — se a lista de arquivos carregar (mesmo vazia para datas recentes), a policy está ativa.</p>
+        </div></div>
+      </div>
+
+      <div class="req-card" id="req-oci-3">
+        <div class="req-head" onclick="toggleReq('req-oci-3')">
+          <div class="req-num">3</div>
+          <div class="req-title">Grupo IAM e permissões de usuário</div>
+          <svg class="req-chevron" width="16" height="16" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+        </div>
+        <div class="req-body"><div class="req-body-inner">
+          <p>Para a policy de cross-tenancy funcionar, seu usuário precisa pertencer ao grupo referenciado nela.</p>
+          <p><strong>Verificar seu grupo:</strong> Identity & Security → Users → seu usuário → aba "Groups".</p>
+          <p><strong>Verificar se o grupo tem a policy correta:</strong> Identity & Security → Policies → compartimento raiz → confirme que o nome do grupo no <code>endorse group</code> corresponde a um dos seus grupos.</p>
+          <div class="callout warn">Se seu usuário não pertence a nenhum grupo com a policy, acione o <strong>Tenancy Administrator</strong> para criar a policy com o grupo correto ou adicionar seu usuário ao grupo existente.</div>
+        </div></div>
+      </div>
+
+      <div class="req-card" id="req-oci-4">
+        <div class="req-head" onclick="toggleReq('req-oci-4')">
+          <div class="req-num">4</div>
+          <div class="req-title">Permissão para acessar o menu Billing no console</div>
+          <svg class="req-chevron" width="16" height="16" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+        </div>
+        <div class="req-body"><div class="req-body-inner">
+          <p>Além da policy de cross-tenancy, acessar o menu "Billing & Cost Management" requer permissão de leitura em recursos de billing:</p>
+          <pre>allow group &lt;nome_do_grupo&gt; to read usage-budgets in tenancy
+allow group &lt;nome_do_grupo&gt; to read usage-reports in tenancy</pre>
+          <p>Deve ser criada no compartimento raiz pelo administrador do tenancy.</p>
+          <div class="callout">Consegue ver o menu "Billing & Cost Management" mas não encontra "Cost and Usage Reports"? Provavelmente falta essa segunda policy.</div>
+        </div></div>
+      </div>
+
+      <div class="req-card" id="req-oci-5">
+        <div class="req-head" onclick="toggleReq('req-oci-5')">
+          <div class="req-num">5</div>
+          <div class="req-title">Quem pode criar policies no tenancy</div>
+          <svg class="req-chevron" width="16" height="16" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+        </div>
+        <div class="req-body"><div class="req-body-inner">
+          <p>Apenas o <strong>Tenancy Administrator</strong> (membro do grupo <code>Administrators</code>) pode criar policies no compartimento raiz.</p>
+          <p><strong>Como identificar:</strong> Identity & Security → Groups → grupo "Administrators" → veja a lista de membros.</p>
+          <div class="callout">Se você não é membro do grupo Administrators, acione um dos administradores listados para criar as policies necessárias.</div>
+        </div></div>
+      </div>
+
+      <div class="req-card" id="req-oci-6">
+        <div class="req-head" onclick="toggleReq('req-oci-6')">
+          <div class="req-num">6</div>
+          <div class="req-title">Disponibilidade dos relatórios FOCUS no seu ambiente</div>
+          <svg class="req-chevron" width="16" height="16" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+        </div>
+        <div class="req-body"><div class="req-body-inner">
+          <table class="mini-table">
+            <tr><th>Condição</th><th>Disponibilidade</th></tr>
+            <tr><td>Tenancy comercial (pago) — regiões comerciais</td><td style="color:var(--brand-success); font-weight:700;">Sim — gerado a cada ~6h</td></tr>
+            <tr><td>Tenancy Free Trial</td><td style="color:var(--brand-warning); font-weight:700;">Limitado</td></tr>
+            <tr><td>Tenancy não faturado (non-metered)</td><td style="color:var(--brand-error); font-weight:700;">Não</td></tr>
+            <tr><td>Regiões Government / Sovereign (OC2, OC3, OC4)</td><td style="color:var(--brand-warning); font-weight:700;">Verificar com suporte Oracle</td></tr>
+          </table>
+          <div class="callout">Os relatórios ficam armazenados por <strong>1 ano</strong> no bucket da Oracle — histórico de até 12 meses acessível via console.</div>
+        </div></div>
+      </div>
+
+      <div class="checklist" style="margin-top:28px;">
+        <div style="font-weight:700; margin-bottom:14px; font-size:15px;">Self-check antes de prosseguir</div>
+        <div class="check-item"><div class="check-box" onclick="toggleCheck(this)"></div><div>Meu tenancy é comercial (pago/faturado)</div></div>
+        <div class="check-item"><div class="check-box" onclick="toggleCheck(this)"></div><div>Existe a policy <code>endorse group &lt;grupo&gt; to read objects in tenancy usage-report</code> no compartimento raiz</div></div>
+        <div class="check-item"><div class="check-box" onclick="toggleCheck(this)"></div><div>Meu usuário pertence ao grupo referenciado nessa policy</div></div>
+        <div class="check-item"><div class="check-box" onclick="toggleCheck(this)"></div><div>Consigo acessar "Billing & Cost Management" sem erro de permissão</div></div>
+        <div class="check-item"><div class="check-box" onclick="toggleCheck(this)"></div><div>Meu tenancy está em região comercial (não Government/Sovereign)</div></div>
+        <div class="check-result" id="check-result-oci">0 de 5 confirmados</div>
+      </div>
+    </section>
+
+    <section class="block" id="oci-extracao">
+      <div class="sec-label">Parte 2 — Manuseio da interface</div>
+      <h2>Localização e download</h2>
+      <p class="sec-desc">Na OCI não há exportação para configurar — os relatórios FOCUS já existem no bucket da Oracle. O processo é apenas <strong>localizar e baixar</strong>.</p>
+
+      <div class="callout">Fluxo: Billing & Cost Management → Cost and Usage Reports → <strong>FOCUS Reports</strong> → YYYY → MM → DD → arquivo <code>.csv.gz</code>.</div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">1</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Acesse o OCI Console</h3>
+          <p>Faça login em <a href="https://cloud.oracle.com" target="_blank">cloud.oracle.com</a> com seu usuário OCI.</p>
+          <div class="callout">Certifique-se de estar na <strong>região home</strong> do tenancy — os relatórios ficam armazenados lá. Troque no seletor de região (canto superior direito) se necessário.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">2</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Navegue até Cost and Usage Reports</h3>
+          <p>Menu (☰) → <strong>Billing & Cost Management</strong> → <strong>Cost and Usage Reports</strong>.</p>
+          <div class="callout warn">Não encontra "Billing & Cost Management"? Falta permissão — volte à premissa 4. Encontra o menu mas a lista não carrega? Falta a policy de cross-tenancy — volte à premissa 2.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">3</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Localize os relatórios FOCUS</h3>
+          <p>Você verá dois tipos de conteúdo: relatórios no <strong>formato proprietário OCI</strong> (arquivos listados diretamente, ex: <code>reports/cost-csv/YYYY-MM-DD-report-NNNNN.csv.gz</code>) e os <strong>relatórios FOCUS</strong>, em estrutura de pastas.</p>
+          <ol>
+            <li>Expanda a pasta <strong>"FOCUS Reports"</strong></li>
+            <li>Expanda o <strong>ano</strong> desejado (ex: 2025)</li>
+            <li>Expanda o <strong>mês</strong> (ex: 06)</li>
+            <li>Expanda o <strong>dia</strong> (ex: 01)</li>
+          </ol>
+          <div class="callout">É normal encontrar mais de um arquivo por dia. Histórico disponível por até 1 ano.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">4</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Baixe os arquivos para um período</h3>
+          <p><strong>Individual:</strong> navegue até a pasta do dia → menu de ações (⋮) ao lado do arquivo → <strong>"Download report"</strong>.</p>
+          <p><strong>Múltiplos dias:</strong> o console não suporta seleção em lote. Para volumes pequenos, repita manualmente; para volumes maiores, use a <strong>OCI CLI</strong>:</p>
+          <pre># namespace: bling · bucket: OCID do tenancy · prefixo: FOCUS Reports/YYYY/MM/DD/
+
+oci os object list \
+  --namespace-name bling \
+  --bucket-name &lt;seu-tenancy-ocid&gt; \
+  --prefix "FOCUS Reports/2025/06/01/"
+
+oci os object bulk-download \
+  --namespace-name bling \
+  --bucket-name &lt;seu-tenancy-ocid&gt; \
+  --prefix "FOCUS Reports/2025/06/" \
+  --download-dir ./focus-junho-2025</pre>
+          <p>O OCID do tenancy está disponível em <strong>Profile → Tenancy</strong> no canto superior direito.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">5</div><div class="step-line"></div></div>
+        <div class="step-card">
+          <h3>Identifique quais arquivos baixar por período</h3>
+          <p>Os relatórios são particionados por <strong>dia de uso</strong> (não por mês de faturamento, diferente de Azure/AWS) — é necessário baixar os arquivos de cada dia do período desejado.</p>
+          <table class="mini-table">
+            <tr><th>Período desejado</th><th>Pastas a baixar</th></tr>
+            <tr><td>Mês completo (ex: jun/2025)</td><td><code>FOCUS Reports/2025/06/01/</code> até <code>.../06/30/</code></td></tr>
+            <tr><td>Últimos 3 meses</td><td>Todas as pastas de dia dos 3 meses</td></tr>
+            <tr><td>Ano completo</td><td>Todas as pastas diárias do ano</td></tr>
+          </table>
+          <div class="callout">Para volumes grandes, use o comando <code>bulk-download</code> com o prefixo do mês/ano — muito mais eficiente que download manual.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-rail"><div class="step-dot">6</div></div>
+        <div class="step-card">
+          <h3>Valide os arquivos recebidos</h3>
+          <ul>
+            <li>Extensão <code>.csv.gz</code>, tamanho maior que 0 KB</li>
+            <li>Cabeçalho contém: <code>BillingPeriodStart</code>, <code>ChargePeriodStart</code>, <code>EffectiveCost</code>, <code>ProviderName</code>, <code>ChargeDescription</code></li>
+            <li><code>ProviderName</code> = <code>Oracle</code></li>
+          </ul>
+          <p>Linux/macOS:</p>
+          <pre>zcat arquivo.csv.gz | head -1</pre>
+          <p>Windows (PowerShell, após descompactar):</p>
+          <pre>Get-Content "arquivo.csv" -TotalCount 1</pre>
+          <div class="callout warn">Arquivo com colunas como <code>lineItem/referenceNo</code> ou <code>product/service</code>? Você baixou o formato proprietário OCI, não o FOCUS. Volte ao passo 3 e expanda a pasta "FOCUS Reports".</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="oci-faq">
+      <div class="sec-label">Parte 3 — Suporte</div>
+      <h2>Problemas frequentes</h2>
+      <p class="sec-desc">Bloqueios mais comuns e como resolvê-los.</p>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Menu "Billing & Cost Management" não aparece <span class="faq-chevron">▾</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Sem permissão de billing no IAM. Solicite ao Tenancy Administrator a policy <code>allow group &lt;grupo&gt; to read usage-reports in tenancy</code>.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Lista de relatórios não carrega ou dá erro de permissão <span class="faq-chevron">▾</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Policy de cross-tenancy ausente ou incorreta. Solicite ao Tenancy Administrator a policy <code>endorse group &lt;grupo&gt; to read objects in tenancy usage-report</code> no compartimento raiz.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Vejo relatórios OCI proprietários mas não "FOCUS Reports" <span class="faq-chevron">▾</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Pasta pode não aparecer se o acesso é muito recente. Aguarde até 24h; se persistir, verifique se o tenancy é faturado.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Arquivos com campos OCI em vez de FOCUS <span class="faq-chevron">▾</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Baixou da pasta errada. Confirme que expandiu "FOCUS Reports" e não os arquivos listados na raiz.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Download pelo console é muito lento para vários meses <span class="faq-chevron">▾</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Limitação do console para lote. Use a OCI CLI com <code>bulk-download</code>.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">OCI CLI retorna erro 404 no bucket <span class="faq-chevron">▾</span></div>
+        <div class="faq-a"><div class="faq-a-inner">OCID do tenancy incorreto no comando. Verifique em Profile → Tenancy e corrija.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Arquivos com dados atrasados (lag de até 24h) <span class="faq-chevron">▾</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Comportamento normal da OCI. Para dados do dia atual, aguarde o próximo ciclo de geração.</div></div>
+      </div>
+    </section>
+
+    <section class="block" id="oci-enviar">
+      <div class="sec-label">Parte 4 — Finalização</div>
+      <h2>O que enviar à FinCodex</h2>
+      <div class="summary-card">
+        <p style="margin:0; font-size:14.5px; color:var(--text-secondary);">Após concluir o download, envie os itens abaixo para o time responsável pela análise:</p>
+        <ul>
+          <li>Arquivo(s) <code>.csv.gz</code> — um ou mais por dia/mês baixado</li>
+          <li>Período coberto, por data de uso (ex: "01/01/2025 a 30/06/2025")</li>
+          <li>OCID do tenancy</li>
+          <li>Região home do tenancy (ex: sa-saopaulo-1, us-ashburn-1)</li>
+        </ul>
+      </div>
+      <div class="refs">
+        Referências oficiais Oracle —
+        <a href="https://docs.oracle.com/en-us/iaas/Content/Billing/Concepts/costusagereportsoverview.htm" target="_blank">Cost Reports (FOCUS)</a> ·
+        <a href="https://docs.oracle.com/en-us/iaas/Content/Billing/Tasks/download-cost-usage-report.htm" target="_blank">Download de relatórios</a> ·
+        <a href="https://docs.oracle.com/iaas/Content/Identity/policiesgs/get-started-with-policies.htm" target="_blank">Policies na OCI</a> ·
+        <a href="https://focus.finops.org" target="_blank">Especificação FOCUS</a>
+      </div>
+    </section>
+
+  </div>
+
+</div>
+
+<footer>
+  <div class="wrap footer-inner">
+    <div class="footer-brand">FinCodex</div>
+    <div class="footer-note" id="footer-note">Guia de extração FOCUS · AWS Data Exports (FOCUS 1.0 GA, nov/2024+) · Guia oficial FinCodex para clientes</div>
+  </div>
+</footer>
+
+<script>
+var currentProvider = 'aws';
+
+function setTheme(mode){
+  document.documentElement.setAttribute('data-theme', mode);
+  document.getElementById('btn-claro').classList.toggle('active', mode==='claro');
+  document.getElementById('btn-escuro').classList.toggle('active', mode==='escuro');
+}
+
+var providers = ['aws','azure','gcp','oci'];
+var footerNotes = {
+  aws:   'Guia de extração FOCUS · AWS Data Exports (FOCUS 1.0 GA, nov/2024+) · Guia oficial FinCodex para clientes',
+  azure: 'Guia de extração FOCUS · Azure Cost Management + Billing (FOCUS v1.2, jun/2025+) · Guia oficial FinCodex para clientes',
+  gcp:   'Guia de extração FOCUS · GCP BigQuery Export (FOCUS v1.0, Preview) · Guia oficial FinCodex para clientes',
+  oci:   'Guia de extração FOCUS · OCI Cost and Usage Reports (FOCUS v1.0, GA jun/2024+) · Guia oficial FinCodex para clientes'
+};
+
+function switchProvider(name){
+  currentProvider = name;
+  providers.forEach(function(p){
+    var tab = document.getElementById('tab-' + p);
+    if(tab) tab.classList.toggle('active', name===p);
+    var hero = document.getElementById('hero-' + p);
+    if(hero) hero.style.display = (name===p) ? '' : 'none';
+    var panel = document.getElementById('panel-' + p);
+    if(panel) panel.style.display = (name===p) ? '' : 'none';
+  });
+  document.getElementById('footer-note').textContent = footerNotes[name];
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function scrollToSection(name){
+  var el = document.getElementById(currentProvider + '-' + name);
+  if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); }
+}
+
+function toggleReq(id){
+  document.getElementById(id).classList.toggle('open');
+}
+function toggleFaq(el){
+  el.parentElement.classList.toggle('open');
+}
+function toggleCheck(el){
+  el.classList.toggle('checked');
+  var panel = el.closest('.provider-panel');
+  var provider = panel.id.replace('panel-', '');
+  var total = panel.querySelectorAll('.check-box').length;
+  var checked = panel.querySelectorAll('.check-box.checked').length;
+  var result = document.getElementById('check-result-' + provider);
+  result.textContent = checked + ' de ' + total + ' confirmados';
+  result.classList.toggle('ok', checked === total);
+}
+
+// abre a primeira premissa de cada provedor por padrão
+document.getElementById('req-aws-1').classList.add('open');
+document.getElementById('req-azure-1').classList.add('open');
+document.getElementById('req-gcp-1').classList.add('open');
+document.getElementById('req-oci-1').classList.add('open');
+</script>
+
+</body>
+</html>
