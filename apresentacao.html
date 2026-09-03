@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>finCodex FinOps Focus</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ── THEME CLARO ─────────────────────────────────── */
+:root {
+  --brand-bg:#EAE0CC;--brand-surface:#F5EDD8;--brand-surface-2:#E0D4BA;
+  --brand-border:#D2C8AA;--brand-border-hi:#BEB096;
+  --brand-primary:#C08830;--brand-primary-dim:rgba(192,136,48,.12);--brand-primary-glow:rgba(192,136,48,.25);
+  --brand-secondary:#8C6018;--brand-secondary-dim:rgba(140,96,24,.12);
+  --brand-success:#276747;--brand-success-dim:rgba(39,103,71,.12);
+  --brand-error:#C0392B;--brand-error-dim:rgba(192,57,43,.12);
+  --brand-warning:#8C7800;
+  --text-primary:#1E0E05;--text-secondary:#503018;--text-muted:#8C826E;
+  --font-headline:'Space Grotesk',sans-serif;--font-body:'Inter',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+  --gt1:#C08830;--gt2:#DCAA46;--gt3:#E6B858;
+  --fs-h1:clamp(40px,5vw,72px);--fs-h2:clamp(28px,3.6vw,48px);
+  --fs-body-lg:clamp(18px,1.5vw,24px);--fs-body:18px;--fs-small:14px;
+  --radius:12px;--radius-sm:8px;--slide-max-w:1280px;
+}
+html{transition:background-color .42s;}
+body{transition:background-color .42s,color .32s;}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;background:var(--brand-bg);color:var(--text-primary);
+  font-family:var(--font-body);font-size:var(--fs-body);line-height:1.5;-webkit-font-smoothing:antialiased;}
+
+/* ── CHROME ──────────────────────────────────────── */
+#progress-bar{position:fixed;top:0;left:0;height:3px;background:var(--brand-primary);
+  transition:width .4s cubic-bezier(.25,.46,.45,.94);z-index:1000;box-shadow:0 0 8px var(--brand-primary-glow);}
+#fincodex-logo{position:fixed;top:22px;right:28px;font-family:var(--font-headline);font-weight:800;
+  font-size:16px;color:var(--text-primary);letter-spacing:-0.5px;z-index:100;user-select:none;transition:color .3s;}
+#slide-num{position:fixed;top:22px;left:28px;font-family:var(--font-mono);font-size:11px;
+  color:var(--text-muted);letter-spacing:1px;z-index:100;transition:color .3s;}
+
+/* ── SLIDE ENGINE ────────────────────────────────── */
+.slide{display:none;width:100%;height:100vh;overflow-y:auto;padding:52px 56px 100px;}
+.slide.active{display:flex;flex-direction:column;}
+.slide-inner{max-width:var(--slide-max-w);width:100%;margin:0 auto;display:flex;flex-direction:column;
+  justify-content:center;min-height:calc(100vh - 160px);gap:20px;animation:slideIn .45s ease;}
+@keyframes slideIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── BOTTOM NAV ──────────────────────────────────── */
+#bottom-nav{position:fixed;bottom:0;left:0;right:0;height:56px;display:flex;align-items:center;
+  justify-content:center;gap:12px;background:linear-gradient(transparent,var(--brand-bg) 40%);
+  z-index:999;padding-top:20px;transition:background .42s;}
+.nav-arrow{width:36px;height:36px;border-radius:50%;border:1px solid var(--brand-border-hi);
+  background:var(--brand-surface);color:var(--text-secondary);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .2s;}
+.nav-arrow:hover{border-color:var(--brand-primary);color:var(--brand-primary);}
+#nav-counter{font-family:var(--font-mono);font-size:13px;color:var(--text-muted);min-width:60px;text-align:center;}
+.nav-dots{display:flex;gap:6px;}
+.nav-dot{width:8px;height:8px;border-radius:50%;background:var(--brand-border-hi);cursor:pointer;transition:all .3s;}
+.nav-dot.active{background:var(--brand-primary);box-shadow:0 0 8px var(--brand-primary-glow);}
+.nav-sep{width:1px;height:20px;background:var(--brand-border-hi);opacity:.5;}
+#mode-toggle,#roteiro-btn{display:inline-flex;align-items:center;gap:7px;padding:5px 14px 5px 10px;
+  border-radius:999px;border:1px solid var(--brand-border-hi);background:var(--brand-surface-2);
+  cursor:pointer;font-family:var(--font-mono);font-size:10px;letter-spacing:1.8px;
+  text-transform:uppercase;color:var(--text-secondary);user-select:none;transition:all .2s;}
+#mode-toggle:hover,#roteiro-btn:hover,#roteiro-btn.open{border-color:var(--brand-primary);
+  color:var(--brand-primary);background:var(--brand-primary-dim);}
+.toggle-pip{width:9px;height:9px;border-radius:50%;background:var(--brand-primary);
+  box-shadow:0 0 7px var(--brand-primary-glow);flex-shrink:0;}
+
+/* ── TYPOGRAPHY ──────────────────────────────────── */
+.eyebrow{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:11px;
+  letter-spacing:2px;text-transform:uppercase;color:var(--brand-primary);margin-bottom:14px;}
+.eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--brand-primary);}
+.slide-title{font-family:var(--font-headline);font-size:var(--fs-h1);font-weight:800;
+  line-height:1.1;letter-spacing:-1px;margin-bottom:10px;}
+.slide-subtitle{font-size:var(--fs-body-lg);color:var(--text-secondary);line-height:1.4;}
+.gradient-text{background:linear-gradient(135deg,var(--gt1),var(--gt2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.section-label{font-family:var(--font-mono);font-size:11px;letter-spacing:2px;
+  text-transform:uppercase;color:var(--text-muted);}
+
+/* ── ANIMATIONS ──────────────────────────────────── */
+.animate{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease;}
+.animate.in{opacity:1;transform:translateY(0);}
+.delay-1{transition-delay:80ms;}.delay-2{transition-delay:200ms;}.delay-3{transition-delay:340ms;}
+.delay-4{transition-delay:480ms;}.delay-5{transition-delay:700ms;}.delay-6{transition-delay:950ms;}
+.delay-stanza{transition-delay:1500ms;}
+.anim-path{stroke-dasharray:1300;stroke-dashoffset:1300;}
+.anim-fill{opacity:0;}.anim-label{opacity:0;}
+
+/* ── CARDS ───────────────────────────────────────── */
+.comp-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.comp-card{background:var(--brand-surface);border:1px solid var(--brand-border);
+  border-radius:var(--radius);padding:24px;}
+.comp-card.highlighted{border-color:var(--brand-primary);
+  box-shadow:0 0 20px var(--brand-primary-dim),inset 0 0 20px var(--brand-primary-dim);}
+
+/* ── S01 COVER ───────────────────────────────────── */
+.cover-layout{display:flex;align-items:center;justify-content:space-between;
+  min-height:calc(100vh - 160px);gap:32px;}
+.cover-title{font-family:var(--font-headline);font-size:clamp(52px,6.5vw,86px);font-weight:800;
+  line-height:1.04;letter-spacing:-2px;margin:0 0 18px;}
+.cover-badge{display:inline-flex;align-items:center;gap:10px;padding:7px 16px;
+  border:1px solid var(--brand-border);border-radius:999px;font-family:var(--font-mono);
+  font-size:11px;color:var(--text-muted);letter-spacing:1px;margin-top:24px;}
+
+/* ── S02 STATEMENT ───────────────────────────────── */
+.statement-layout{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;min-height:calc(100vh - 160px);gap:0;}
+.stmt-p1{font-size:clamp(30px,4vw,56px);font-weight:800;line-height:1.1;letter-spacing:-1.5px;margin:0;}
+.stmt-p2{font-size:clamp(30px,4vw,56px);font-weight:800;line-height:1.1;letter-spacing:-1.5px;margin:28px 0 0;}
+
+/* ── S04 CHART ───────────────────────────────────── */
+.chart-quote{border-left:2.5px solid var(--brand-primary);padding-left:16px;
+  font-size:15px;color:var(--text-secondary);font-style:italic;line-height:1.6;}
+
+/* ── S05 PHASES ──────────────────────────────────── */
+.phase-statement{font-size:clamp(20px,2.8vw,34px);font-weight:800;letter-spacing:-0.5px;margin:0 0 6px;}
+.phase-sub{font-size:var(--fs-body-lg);color:var(--text-secondary);margin:0 0 20px;}
+.phase-num{font-family:var(--font-mono);font-size:28px;font-weight:700;color:var(--brand-primary);margin-bottom:8px;line-height:1;}
+.phase-name{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--text-secondary);margin-bottom:10px;}
+.phase-desc{font-size:14px;color:var(--text-secondary);line-height:1.5;}
+.phase-quote{font-family:var(--font-mono);font-size:13px;color:var(--brand-primary);
+  padding-top:16px;border-top:1px solid var(--brand-border);}
+
+/* ── S06 STATS ───────────────────────────────────── */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr 1.5fr;gap:16px;}
+.stat-block{background:var(--brand-surface);border:1px solid var(--brand-border);
+  border-radius:var(--radius);padding:24px 20px;display:flex;flex-direction:column;gap:8px;}
+.stat-num{font-family:var(--font-headline);font-weight:800;color:var(--brand-primary);line-height:1;}
+.stat-hero{font-size:clamp(54px,7vw,80px);}
+.stat-sec{font-size:clamp(40px,5.5vw,60px);}
+.stat-ctx{font-size:13px;color:var(--text-secondary);line-height:1.4;}
+.stat-trend{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);}
+.t-card{background:var(--brand-surface);border:1px solid var(--brand-border);
+  border-left:3px solid var(--brand-primary);border-radius:var(--radius);
+  padding:24px 20px;display:flex;flex-direction:column;}
+.t-mark{font-family:var(--font-headline);font-size:42px;color:var(--brand-primary);
+  line-height:.85;margin-bottom:8px;opacity:.6;}
+.t-text{font-size:13px;color:var(--text-secondary);font-style:italic;line-height:1.6;flex:1;margin:0;}
+.t-src{font-family:var(--font-mono);font-size:9px;color:var(--text-muted);
+  letter-spacing:1.5px;text-transform:uppercase;margin-top:14px;}
+
+/* ── S07 TABLE ───────────────────────────────────── */
+.lang-q{font-size:var(--fs-body-lg);color:var(--text-muted);font-style:italic;}
+.ft{width:100%;table-layout:fixed;border-collapse:collapse;}
+.ft thead th{font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--text-secondary);
+  padding:8px 10px;border-bottom:2px solid var(--brand-border-hi);
+  text-align:left;letter-spacing:1.5px;text-transform:uppercase;}
+.ft thead th:first-child{width:90px;}
+.ft tbody td{font-family:var(--font-mono);font-size:8px;color:var(--text-muted);
+  padding:5px 10px;border-bottom:1px solid var(--brand-border);
+  vertical-align:top;line-height:1.5;word-break:break-all;}
+.ft tbody td:first-child{font-size:10px;font-weight:700;color:var(--text-secondary);
+  letter-spacing:1px;text-transform:uppercase;word-break:normal;}
+.ft tbody tr:last-child td{border-bottom:none;}
+.lang-alert{display:flex;align-items:center;gap:14px;padding:12px 18px;
+  background:var(--brand-primary-dim);border:1px solid rgba(192,136,48,.3);
+  border-radius:var(--radius-sm);}
+.lang-alert-ico{font-size:18px;flex-shrink:0;}
+.lang-alert-txt{font-size:14px;font-weight:700;color:var(--brand-primary);}
+
+/* ── S09 ECOSYSTEM ───────────────────────────────── */
+.eco-pills{display:flex;flex-wrap:wrap;gap:6px;}
+.eco-pill{padding:4px 14px;border-radius:999px;font-family:var(--font-mono);font-size:10px;
+  font-weight:600;border:1px solid var(--brand-border);background:var(--brand-surface);
+  color:var(--text-secondary);letter-spacing:.3px;white-space:nowrap;}
+.eco-div{height:1px;background:var(--brand-border-hi);}
+.tl-row{display:grid;grid-template-columns:44px 82px 1fr;gap:8px;
+  align-items:baseline;padding:5px 0;border-bottom:1px solid var(--brand-border);}
+.tl-row:last-child{border-bottom:none;}
+.tl-v{font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--brand-primary);}
+.tl-d{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);}
+.tl-x{font-size:12px;color:var(--text-secondary);line-height:1.3;}
+.tl-proj{opacity:.55;}.tl-proj .tl-x,.tl-proj .tl-d{font-style:italic;}
+.proj-badge{display:inline-block;padding:1px 6px;border:1px dashed rgba(192,136,48,.55);
+  border-radius:4px;font-family:var(--font-mono);font-size:8px;color:var(--brand-primary);
+  letter-spacing:1px;margin-left:8px;vertical-align:middle;}
+.eco-tagline{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);}
+
+/* ── RESPONSIVE ──────────────────────────────────── */
+@media(max-width:1100px){
+  .slide{padding:44px 36px 100px;}
+  .comp-grid-3,.stats-grid{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:720px){
+  .slide{padding:28px 20px 100px;}
+  .comp-grid-3,.stats-grid{grid-template-columns:1fr;}
+  .cover-layout{flex-direction:column;}
+}
+
+/* ── S11 ── */
+.req-card{background:var(--brand-surface);border:2px solid var(--brand-primary);border-radius:var(--radius);padding:22px 26px;box-shadow:0 0 20px var(--brand-primary-dim),inset 0 0 20px var(--brand-primary-dim);}
+.req-main{font-size:clamp(18px,2.2vw,26px);font-weight:800;letter-spacing:-0.4px;line-height:1.15;margin:0;}
+.req-sub{font-family:var(--font-mono);font-size:12px;color:var(--brand-primary);margin-top:8px;}
+.why-lbl{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);}
+.bullets{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
+.bullet{display:flex;align-items:baseline;gap:10px;font-size:15px;color:var(--text-secondary);line-height:1.4;}
+.bullet::before{content:'·';color:var(--brand-primary);font-size:20px;flex-shrink:0;line-height:1;}
+.note-d{font-size:12px;color:var(--text-muted);font-family:var(--font-mono);border-top:1px solid var(--brand-border);padding-top:12px;}
+/* ── S13 ── */
+.steps{display:flex;align-items:flex-start;gap:0;width:100%;}
+.step{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;}
+.step-num{width:38px;height:38px;border-radius:50%;background:var(--brand-primary-dim);border:1.5px solid var(--brand-primary);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--brand-primary);}
+.step-name{font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-secondary);}
+.step-desc{font-size:12px;color:var(--text-muted);line-height:1.35;max-width:130px;}
+.step-arr{padding-top:19px;color:var(--brand-border-hi);font-size:16px;flex-shrink:0;width:22px;text-align:center;}
+.hero-div{height:1px;background:var(--brand-border-hi);}
+.hero-block{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;}
+.hero-num{font-family:var(--font-headline);font-weight:800;font-size:clamp(60px,8vw,92px);line-height:1;letter-spacing:-3px;color:var(--brand-primary);}
+.hero-unit{font-size:12px;color:var(--text-muted);font-family:var(--font-mono);letter-spacing:1px;text-transform:uppercase;}
+/* ── S14 ── */
+.bar-rows{display:flex;flex-direction:column;gap:14px;}
+.bar-row{display:flex;flex-direction:column;gap:5px;}
+.bar-hdr{display:flex;align-items:baseline;gap:10px;}
+.bar-cat{font-family:var(--font-mono);font-size:14px;font-weight:700;min-width:26px;}
+.bar-desc{font-size:14px;color:var(--text-secondary);flex:1;}
+.bar-pct{font-family:var(--font-mono);font-size:16px;font-weight:700;min-width:44px;text-align:right;}
+.bar-track{background:var(--brand-surface-2);border-radius:6px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:6px;}
+.bar-quote{border-left:2.5px solid var(--brand-primary);padding-left:16px;font-size:15px;color:var(--text-secondary);font-style:italic;line-height:1.6;}
+/* ── S15 ── */
+.op-grid{display:grid;grid-template-columns:1.75fr 1fr;gap:16px;align-items:start;}
+.op-card{background:#FFFFFF;border:1px solid #C0C1BF;border-radius:10px;padding:11px 13px;position:relative;}
+.op-hdr{border-bottom:1px solid #E0E1DF;padding-bottom:7px;margin-bottom:8px;}
+.op-ttl{font-size:10px;font-weight:700;color:#0F0F0F;}
+.op-sbttl{font-family:'JetBrains Mono',monospace;font-size:8px;color:#888;margin-top:2px;}
+.op-kgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:8px;}
+.op-k{background:#F4F4F3;border-radius:5px;padding:5px 6px;}
+.op-kv{font-size:11px;font-weight:700;color:#0F0F0F;line-height:1;}
+.op-ks{font-size:7.5px;color:#888;margin-top:2px;font-family:'JetBrains Mono',monospace;}
+.op-dv{height:1px;background:#E0E1DF;margin:7px 0;}
+.op-sg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;}
+.op-sv{background:#F4F4F3;border-radius:5px;padding:6px 8px;}
+.op-sv.hl{background:rgba(192,136,48,0.08);border:1px solid rgba(192,136,48,0.3);}
+.op-svl{font-size:7px;color:#888;text-transform:uppercase;letter-spacing:0.8px;font-family:'JetBrains Mono',monospace;}
+.op-svv{font-size:15px;font-weight:800;color:#0F0F0F;line-height:1.1;margin-top:2px;}
+.op-svv.ol{color:#C08830;}
+.op-svs{font-size:7.5px;color:#888;margin-top:2px;font-family:'JetBrains Mono',monospace;}
+.op-hh{font-size:8.5px;font-weight:700;color:#444;text-transform:uppercase;letter-spacing:1px;font-family:'JetBrains Mono',monospace;margin-bottom:5px;}
+.op-hr{display:flex;gap:5px;align-items:center;padding:3px 0;border-bottom:1px solid #F0F0EF;}
+.op-hid{font-family:'JetBrains Mono',monospace;font-size:7.5px;font-weight:700;color:#C08830;min-width:44px;}
+.op-ht{font-size:8px;color:#444;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.op-hrg{font-family:'JetBrains Mono',monospace;font-size:7.5px;color:#888;white-space:nowrap;}
+.cn{position:absolute;width:20px;height:20px;border-radius:50%;background:#C08830;color:#FFF;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2.5px var(--brand-bg),0 0 0 4px #C08830;z-index:10;}
+.co-list{display:flex;flex-direction:column;gap:14px;}
+.co-item{display:flex;gap:10px;align-items:flex-start;}
+.co-n{width:24px;height:24px;border-radius:50%;background:var(--brand-primary);color:#FFF;font-family:var(--font-mono);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.co-txt{font-size:12px;color:var(--text-secondary);line-height:1.4;}
+.co-val{font-family:var(--font-mono);font-size:11px;color:var(--brand-primary);font-weight:700;display:block;margin-top:2px;}
+/* ── S16 ── */
+.hyp-card{background:var(--brand-surface);border:1.5px solid var(--brand-primary);border-radius:var(--radius);overflow:hidden;box-shadow:0 0 20px var(--brand-primary-dim);}
+.hyp-hdr{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-bottom:1px solid var(--brand-border);}
+.hyp-id{font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--brand-primary);letter-spacing:1px;}
+.hyp-status{font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;background:var(--brand-primary-dim);color:var(--brand-primary);border:1px solid rgba(192,136,48,0.3);border-radius:4px;padding:2px 8px;}
+.hyp-rg{display:grid;grid-template-columns:90px 1fr;gap:8px;padding:6px 14px;border-bottom:1px solid var(--brand-border);}
+.hyp-rg:last-child{border-bottom:none;}
+.hyp-rg.faixa{background:var(--brand-primary-dim);}
+.hyp-lb{font-family:var(--font-mono);font-size:8.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);padding-top:2px;}
+.hyp-vl{font-size:12px;color:var(--text-primary);line-height:1.4;}
+.hyp-vl.fv{font-weight:700;color:var(--brand-primary);font-size:13px;}
+.regra{background:var(--brand-surface);border-radius:var(--radius);border:1px solid var(--brand-border);padding:12px 16px;}
+.regra-lb{font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--brand-primary);margin-bottom:7px;display:flex;align-items:center;gap:8px;}
+.regra-lb::after{content:'';flex:1;height:1px;background:var(--brand-primary-dim);}
+.regra-t1{font-size:13px;color:var(--text-primary);line-height:1.5;font-weight:600;margin:0;}
+.regra-t2{font-size:12px;color:var(--text-secondary);line-height:1.5;margin-top:4px;font-style:italic;}
+/* ── S17 ── */
+.funil-wrap{display:flex;flex-direction:column;align-items:center;gap:5px;}
+.funil-row{display:flex;align-items:center;gap:10px;}
+.funil-bar{height:9px;border-radius:4px;background:var(--brand-primary-dim);border-left:3px solid var(--brand-primary);}
+.funil-txt{font-size:12px;color:var(--text-muted);white-space:nowrap;}
+.req2-card{background:var(--brand-surface);border:2px solid var(--brand-primary);border-radius:var(--radius);padding:14px 18px;box-shadow:0 0 16px var(--brand-primary-dim);}
+.req2-hdr{font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--brand-primary);margin-bottom:8px;}
+.req2-main{font-size:clamp(15px,2vw,20px);font-weight:700;color:var(--text-primary);line-height:1.3;}
+.req2-sub{font-size:12px;color:var(--text-muted);margin-top:4px;}
+/* ── S18 ── */
+.evc{background:#0F1117;border-radius:10px;border:1px solid rgba(255,255,255,0.07);overflow:hidden;position:relative;}
+.evc-hdr{background:#161B27;border-bottom:1px solid rgba(255,255,255,0.07);padding:7px 12px;display:flex;justify-content:space-between;align-items:center;}
+.evc-title{font-family:var(--font-mono);font-size:8.5px;font-weight:700;color:#8B92A8;letter-spacing:1px;text-transform:uppercase;}
+.evc-badge{font-family:var(--font-mono);font-size:8px;color:#34D399;background:rgba(29,158,117,0.12);border:1px solid rgba(29,158,117,0.2);border-radius:4px;padding:2px 7px;}
+.evc-stats{display:flex;gap:16px;padding:7px 12px;border-bottom:1px solid rgba(255,255,255,0.06);}
+.evc-sv{font-family:var(--font-mono);font-size:12px;font-weight:700;color:#E8EAF0;}
+.evc-sl{font-size:8.5px;color:#8B92A8;margin-top:1px;}
+.evc-t{width:100%;border-collapse:collapse;}
+.evc-t th{font-family:var(--font-mono);font-size:7.5px;color:#555E72;letter-spacing:1px;text-transform:uppercase;padding:5px 10px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.06);}
+.evc-t td{font-family:var(--font-mono);font-size:8.5px;color:#8B92A8;padding:5px 10px;border-bottom:1px solid rgba(255,255,255,0.04);}
+.evc-t tr:last-child td{border-bottom:none;}
+.evc-t tr.prd001{background:rgba(226,75,74,0.08);}
+.evc-t tr.prd001 td{color:#E8EAF0;border-left:3px solid #E24B4A;}
+.evc-t tr.prd001 td.ws{color:#F87171;font-weight:700;}
+.evc-t td.sg{color:#34D399;}.evc-t td.sa{color:#FBBF24;}
+.prd-badge{position:absolute;top:7px;right:10px;font-family:var(--font-mono);font-size:8px;font-weight:700;background:#C08830;color:#FFF;border-radius:3px;padding:1px 6px;letter-spacing:0.5px;}
+.asks{display:flex;flex-wrap:wrap;gap:5px 18px;}
+.ask-i{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary);}
+.ask-i::before{content:'·';color:var(--brand-primary);font-size:18px;line-height:1;flex-shrink:0;}
+.cb-q{border-left:2.5px solid var(--brand-primary);padding-left:12px;font-size:12.5px;color:var(--brand-primary);font-style:italic;line-height:1.5;}
+/* ── S19 ── */
+.stamp-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;}
+.stamp-arr{font-size:24px;color:var(--brand-border-hi);text-align:center;padding:0 16px;}
+.stamp{border-radius:var(--radius);padding:16px 18px;}
+.stamp-v{background:rgba(39,103,71,0.07);border:1.5px solid rgba(39,103,71,0.35);}
+.stamp-c{background:var(--brand-primary-dim);border:2px solid var(--brand-primary);box-shadow:0 0 16px var(--brand-primary-dim);}
+.stamp-ck{font-size:22px;font-weight:800;margin-bottom:5px;line-height:1;}
+.stamp-lb{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;}
+.stamp-who{font-size:12px;color:var(--text-secondary);margin-bottom:3px;}
+.stamp-q{font-size:11px;color:var(--text-muted);font-style:italic;}
+.div-mid{display:flex;align-items:center;gap:12px;}
+.div-line{flex:1;height:1px;background:var(--brand-border-hi);}
+.div-lb{font-family:var(--font-mono);font-size:9px;color:var(--text-muted);letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap;}
+.def-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.def-block{padding:14px 16px;border-radius:var(--radius-sm);}
+.def-er{background:rgba(39,103,71,0.07);border-left:3px solid #276747;}
+.def-ce{background:rgba(136,136,136,0.07);border-left:3px solid #888888;}
+.def-lb{font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;}
+.def-lb-er{color:#276747;}.def-lb-ce{color:#888888;}
+.def-txt{font-size:14px;color:var(--text-primary);line-height:1.4;}
+.def-sub{font-size:11px;color:var(--text-muted);margin-top:3px;}
+
+
+/* ── S20 KANBAN ── */
+.kanban{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.kb-col{background:var(--brand-surface);border:1px solid var(--brand-border);border-radius:var(--radius);overflow:hidden;}
+.kb-hdr{padding:8px 10px;border-bottom:1px solid var(--brand-border);}
+.kb-name{font-family:var(--font-mono);font-size:8.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:3px;}
+.kb-count{font-size:28px;font-weight:800;letter-spacing:-1px;line-height:1;}
+.kb-count-0{color:var(--brand-border-hi);}.kb-count-inv{color:var(--brand-primary);}
+.kb-count-conf{color:var(--brand-success);}.kb-count-cap{color:var(--brand-success);}
+.kb-body{padding:7px 8px;display:flex;flex-direction:column;gap:5px;}
+.hcard{border-radius:5px;padding:5px 7px;font-family:var(--font-mono);font-size:8px;border:1px solid;}
+.hcard-inv{background:var(--brand-primary-dim);border-color:rgba(192,136,48,0.2);color:var(--text-secondary);}
+.hcard-conf{background:var(--brand-success-dim);border-color:rgba(39,103,71,0.2);color:var(--text-secondary);}
+.hcard-cap{background:var(--brand-success-dim);border-color:rgba(39,103,71,0.35);color:var(--brand-success);font-weight:700;}
+.hcard-blk{background:rgba(239,159,39,0.08);border-color:rgba(239,159,39,0.4);color:#8C5F00;}
+.kb-more{font-size:8px;color:var(--text-muted);font-family:var(--font-mono);text-align:center;padding:2px 0;}
+.blk-alert{background:rgba(239,159,39,0.08);border:1px solid rgba(239,159,39,0.35);border-left:3px solid #8C7800;border-radius:var(--radius-sm);padding:10px 14px;display:flex;gap:12px;align-items:flex-start;}
+.blk-ico{font-size:16px;flex-shrink:0;line-height:1.2;}
+.blk-id{font-family:var(--font-mono);font-size:11px;font-weight:700;color:#8C5F00;}
+.blk-badge{font-family:var(--font-mono);font-size:9px;background:rgba(140,120,0,0.12);color:#8C5F00;border-radius:4px;padding:1px 7px;margin-left:8px;}
+.blk-desc{font-size:11.5px;color:var(--text-secondary);margin-top:2px;line-height:1.4;}
+.blk-own{font-size:11px;color:var(--brand-primary);font-weight:600;margin-top:6px;}
+/* ── S21 COMPARISON ── */
+.cmp-grid{border-radius:var(--radius);overflow:hidden;border:1px solid var(--brand-border);}
+.ch-row{display:grid;grid-template-columns:1fr 28px 1fr;}
+.ch-left{background:var(--brand-surface-2);padding:9px 14px;border-right:1px solid var(--brand-border);border-bottom:2px solid var(--brand-border-hi);}
+.ch-mid-h{background:var(--brand-surface-2);border-right:1px solid var(--brand-border);border-bottom:2px solid var(--brand-border-hi);}
+.ch-right{background:var(--brand-primary-dim);padding:9px 14px;border-bottom:2px solid rgba(192,136,48,0.4);}
+.ch-n{font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;}
+.ch-nl{color:var(--text-muted);}.ch-nr{color:var(--brand-primary);}
+.cr{display:grid;grid-template-columns:1fr 28px 1fr;border-bottom:1px solid var(--brand-border);}
+.cr:last-child{border-bottom:none;}
+.cr-l{padding:9px 14px;font-size:12.5px;color:var(--text-muted);background:var(--brand-surface);border-right:1px solid var(--brand-border);line-height:1.4;}
+.cr-m{background:var(--brand-surface);border-right:1px solid var(--brand-border);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--brand-border-hi);}
+.cr-r{padding:9px 14px;font-size:12.5px;color:var(--text-primary);background:var(--brand-surface);line-height:1.4;}
+.cr.metric .cr-l{background:var(--brand-surface-2);color:var(--text-muted);font-weight:600;}
+.cr.metric .cr-m{background:var(--brand-surface-2);}
+.cr.metric .cr-r{background:var(--brand-primary-dim);font-weight:700;color:var(--brand-primary);border-left:2px solid var(--brand-primary);}
+.met-lbl{font-family:var(--font-mono);font-size:8.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:2px;}
+.met-lbl-r{color:rgba(192,136,48,0.6);}
+/* ── S22 FUNNEL ── */
+.funnel{display:flex;flex-direction:column;gap:7px;}
+.f-row{display:grid;grid-template-columns:125px 1fr 190px;gap:10px;align-items:center;}
+.f-lbl{font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-align:right;line-height:1.3;}
+.f-bar-wrap{position:relative;height:18px;}
+.f-bar{height:100%;border-radius:4px;}
+.f-stats{display:flex;align-items:baseline;gap:8px;}
+.f-count{font-family:var(--font-mono);font-size:16px;font-weight:800;line-height:1;}
+.f-val{font-family:var(--font-mono);font-size:9.5px;color:var(--text-muted);white-space:nowrap;}
+.f-val-cap{color:var(--brand-success);font-weight:600;}
+.rech-row{display:flex;align-items:center;gap:12px;}
+.rech-line{flex:1;height:1px;background:var(--brand-border-hi);}
+.rech-txt{font-family:var(--font-mono);font-size:9.5px;color:var(--text-muted);white-space:nowrap;}
+.why-hdr{font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-secondary);margin-bottom:6px;}
+.why-2col{display:grid;grid-template-columns:1fr 1fr;gap:3px 20px;}
+.why-item{display:flex;align-items:baseline;gap:7px;font-size:12px;color:var(--text-secondary);line-height:1.4;}
+.why-dot{color:var(--brand-primary);font-size:16px;flex-shrink:0;line-height:1;}
+/* ── S23 SCHEDULE ── */
+.sched{border-radius:var(--radius);overflow:hidden;border:1px solid var(--brand-border);}
+.sched-head{display:grid;grid-template-columns:180px 130px 1fr;background:var(--brand-surface-2);border-bottom:2px solid var(--brand-border-hi);}
+.sh-cell{padding:7px 12px;font-family:var(--font-mono);font-size:8.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);}
+.sched-row{display:grid;grid-template-columns:180px 130px 1fr;border-bottom:1px solid var(--brand-border);align-items:center;background:var(--brand-surface);}
+.sched-row:last-child{border-bottom:none;}
+.sched-nossa{background:var(--brand-surface-2);}
+.ph-cell{padding:8px 12px;display:flex;align-items:center;gap:8px;}
+.ph-n{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:11px;font-weight:700;flex-shrink:0;}
+.ph-active{background:var(--brand-primary-dim);border:1.5px solid var(--brand-primary);color:var(--brand-primary);}
+.ph-neutral{background:var(--brand-surface-2);border:1.5px solid var(--brand-border-hi);color:var(--text-muted);}
+.ph-name{font-size:12px;font-weight:700;color:var(--text-primary);}
+.dur-cell{padding:8px 12px;font-family:var(--font-mono);font-size:11px;color:var(--text-secondary);border-left:1px solid var(--brand-border);}
+.needs-cell{padding:8px 12px;font-size:12px;color:var(--text-secondary);border-left:1px solid var(--brand-border);line-height:1.35;}
+.needs-none{color:var(--text-muted);font-style:italic;font-size:11px;}
+.needs-tag{display:inline-block;font-family:var(--font-mono);font-size:8.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:var(--brand-primary-dim);color:var(--brand-primary);border-radius:3px;padding:1px 6px;margin-left:6px;vertical-align:middle;}
+.dev-card{background:var(--brand-surface);border:1.5px solid var(--brand-primary);border-radius:var(--radius-sm);padding:11px 16px;display:flex;align-items:flex-start;gap:12px;box-shadow:0 0 14px var(--brand-primary-dim);}
+.dev-arr{font-size:18px;color:var(--brand-primary);flex-shrink:0;margin-top:1px;}
+.dev-main{font-size:13px;font-weight:700;color:var(--text-primary);}
+.dev-sub{font-size:11.5px;color:var(--text-muted);margin-top:3px;font-style:italic;line-height:1.4;}
+/* ── S24 LEGACY ── */
+.leg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.leg-card{background:var(--brand-surface);border:1px solid var(--brand-border);border-radius:var(--radius);padding:20px 18px;}
+.leg-num{font-family:var(--font-mono);font-size:32px;font-weight:800;color:var(--brand-primary);line-height:1;margin-bottom:8px;}
+.leg-label{font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-secondary);margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--brand-border);}
+.leg-desc{font-size:13px;color:var(--text-secondary);line-height:1.5;}
+.final-quote{background:var(--brand-surface);border-left:3px solid var(--brand-primary);border-radius:var(--radius-sm);padding:14px 20px;}
+.fq-text{font-size:clamp(14px,1.5vw,18px);font-weight:700;color:var(--text-primary);line-height:1.45;letter-spacing:-0.3px;}
+.fq-em{color:var(--brand-primary);}
+/* ── S25 CONVITE ── */
+.cta-card{background:var(--brand-surface);border:2px solid var(--brand-primary);border-radius:var(--radius);padding:22px 32px;box-shadow:0 0 24px var(--brand-primary-dim),inset 0 0 24px var(--brand-primary-dim);}
+.cta-ew{font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--brand-primary);margin-bottom:12px;}
+.cta-line{font-size:clamp(16px,1.8vw,22px);font-weight:700;color:var(--text-primary);line-height:1.45;letter-spacing:-0.3px;}
+.cta-blank{display:inline-block;min-width:28px;border-bottom:2px solid var(--brand-primary);color:var(--brand-primary);}
+
+/* ── S15 callout pulse — escala verde, pulse intenso ── */
+@keyframes cn-pulse{
+  0%  {box-shadow:0 0 0 0 var(--cn-clr,rgba(39,103,71,.7));}
+  45% {box-shadow:0 0 0 11px rgba(0,0,0,0);}
+  100%{box-shadow:0 0 0 0  rgba(0,0,0,0);}
+}
+/* Verde escuro → verde finCodex: 4 tons */
+.cn   {animation:cn-pulse 1s infinite;--cn-clr:rgba(39,103,71,.65);}
+.cn-1 {background:#1B5E20;box-shadow:0 0 0 2.5px var(--brand-bg),0 0 0 4px #1B5E20;--cn-clr:rgba(27,94,32,.65);}
+.cn-2 {background:#276747;box-shadow:0 0 0 2.5px var(--brand-bg),0 0 0 4px #276747;--cn-clr:rgba(39,103,71,.65);}
+.cn-3 {background:#5A8040;box-shadow:0 0 0 2.5px var(--brand-bg),0 0 0 4px #5A8040;--cn-clr:rgba(90,128,64,.65);}
+.cn-4 {background:#C08830;box-shadow:0 0 0 2.5px var(--brand-bg),0 0 0 4px #C08830;--cn-clr:rgba(192,136,48,0.65);}
+.cn-1,.cn-2,.cn-3,.cn-4{animation:cn-pulse 1s infinite;}
+
+/* ── S18 EVC midnight_executive ── */
+.evc{background:#0C111E!important;border-color:rgba(96,130,182,0.18)!important;}
+.evc-hdr{background:#111827!important;border-color:rgba(96,130,182,0.15)!important;}
+.evc-title{color:#FBBF24!important;}
+.evc-badge{color:#34D399;background:rgba(29,158,117,0.15)!important;border-color:rgba(29,158,117,0.25)!important;}
+.evc-stats{border-color:rgba(96,130,182,0.12)!important;}
+.evc-sv{color:#E2E8F0!important;}.evc-sl{color:#64748B!important;}
+.evc-t th{color:#475569!important;border-color:rgba(96,130,182,0.12)!important;}
+.evc-t td{color:#64748B!important;border-color:rgba(96,130,182,0.06)!important;}
+.evc-t tr.prd001{background:rgba(200,30,30,0.1)!important;}
+.evc-t tr.prd001 td{color:#E2E8F0!important;border-left-color:#C74634!important;}
+.evc-t tr.prd001 td.ws{color:#FCA5A5!important;}
+.evc-t td.sg{color:#34D399!important;}.evc-t td.sa{color:#FBBF24!important;}
+.prd-badge{background:#4F6FA8!important;}
+
+/* ── S26 CONTACT ── */
+.contact-layout{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;min-height:calc(100vh - 160px);}
+.contact-title{font-size:clamp(28px,3.5vw,46px);font-weight:800;letter-spacing:-1px;line-height:1.1;color:var(--text-primary);margin:0 0 6px;}
+.contact-role{font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:28px;}
+.contact-items{display:flex;flex-direction:column;gap:12px;}
+.contact-item{display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--brand-surface);border:1px solid var(--brand-border);border-radius:var(--radius-sm);}
+.ci-icon{width:36px;height:36px;border-radius:var(--radius-sm);background:var(--brand-primary-dim);border:1px solid rgba(192,136,48,.3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.ci-label{font-family:var(--font-mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:2px;}
+.ci-value{font-size:13px;font-weight:600;color:var(--text-primary);}
+.contact-right{display:flex;flex-direction:column;align-items:center;gap:16px;}
+.qr-card{background:var(--brand-surface);border:1px solid var(--brand-border);border-radius:var(--radius);padding:24px;display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;}
+.qr-canvas-wrap{width:180px;height:180px;display:flex;align-items:center;justify-content:center;}
+.qr-label{font-family:var(--font-mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);}
+.qr-num{font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--brand-primary);letter-spacing:.5px;}
+.qr-wa-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.3);border-radius:999px;font-family:var(--font-mono);font-size:10px;font-weight:700;color:#25D366;letter-spacing:1px;text-transform:uppercase;}
+
+/* ── S15 One Page Scorecard – escala verde ── */
+.op-sc-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:3px;margin:5px 0;}
+.op-sc-card{background:#F4F4F3;border:1px solid #E0E1DF;border-radius:4px;padding:4px 3px;text-align:center;}
+.op-sc-dim{font-size:6px;font-weight:700;text-transform:uppercase;color:#888;letter-spacing:.05em;margin-bottom:3px;}
+.op-sc-b{display:inline-block;font-size:6px;font-weight:700;padding:1px 5px;border-radius:10px;letter-spacing:.04em;margin-bottom:3px;}
+.op-sc-b.walk {background:rgba(39,103,71,.13);color:#276747;border:1px solid rgba(39,103,71,.3);}
+.op-sc-b.crawl{background:rgba(192,136,48,0.11);color:#C08830;border:1px solid rgba(192,136,48,0.28);}
+.op-sc-b.run  {background:rgba(39,103,71,.25);color:#1a5233;border:1px solid rgba(39,103,71,.5);}
+.op-sc-ind{font-size:6px;color:#888;line-height:1.3;}
+.op-sc-ind strong{color:#444;font-weight:600;}
+.op-sc-foot{background:rgba(192,136,48,.07);border:1px solid rgba(192,136,48,.22);border-radius:5px;padding:5px 8px;margin-top:4px;}
+.op-sc-foot-t{font-size:8px;font-weight:700;color:#5A5818;margin-bottom:1px;}
+.op-sc-foot-d{font-size:6.5px;color:#C08830;line-height:1.35;}
+.op-sc-lbl{font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;text-transform:uppercase;color:#444;letter-spacing:1px;margin-bottom:5px;}
+
+</style>
+</head>
+<body>
+<div id="progress-bar"></div>
+<div id="fincodex-logo">finCodex</div>
+<div id="slide-num">01 / 09</div>
+<main>
+
+<!-- ═══════════════════════════════════════════ S01 CAPA -->
+<section class="slide" data-slide="0">
+<div class="slide-inner cover-layout" style="margin-left:0;margin-right:auto;">
+  <div>
+    <div class="eyebrow animate delay-1">METODOLOGIA FINCODEX</div>
+    <h1 class="cover-title animate delay-2">finCodex<br><span class="gradient-text">FinOps Focus</span></h1>
+    <p class="slide-subtitle animate delay-3">A jornada de transformar conta de nuvem<br>em decisão de negócio</p>
+    <div class="cover-badge animate delay-4">
+      <span>Interno</span><span style="opacity:.4">·</span><span>2026</span>
+    </div>
+  </div>
+  <div class="animate delay-3" style="flex-shrink:0;opacity:.11;">
+    <svg viewBox="0 0 200 140" width="220" height="154" aria-hidden="true">
+      <polygon points="18,8 92,70 18,132" fill="#C08830"/>
+      <polygon points="78,8 152,70 78,132" fill="#C08830"/>
+    </svg>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════ S02 TESE -->
+<section class="slide" data-slide="1">
+<div class="slide-inner statement-layout">
+  <div class="animate delay-1">
+    <p class="stmt-p1">Suas contas de nuvem não têm<br>um problema de preço.</p>
+  </div>
+  <div class="animate delay-stanza">
+    <p class="stmt-p2">Têm um problema de <span class="gradient-text">idioma</span>.</p>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════ S03 MAPA DA JORNADA -->
+<section class="slide" data-slide="2">
+<div class="slide-inner">
+  <div>
+    <div class="eyebrow animate delay-1">M0 · ABERTURA</div>
+    <h2 class="slide-title animate delay-2" style="font-size:clamp(28px,3.5vw,44px);">A <span class="gradient-text">jornada</span></h2>
+  </div>
+  <div class="animate delay-3">
+    <svg viewBox="0 0 600 98" width="100%" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;">
+      <line x1="72" y1="26" x2="153" y2="26" stroke="#C0C1BF" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="197" y1="26" x2="278" y2="26" stroke="#C0C1BF" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="322" y1="26" x2="403" y2="26" stroke="#C0C1BF" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="447" y1="26" x2="528" y2="26" stroke="#C0C1BF" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cy="26" r="5" fill="#C08830"><animate attributeName="cx" from="72" to="153" dur="1.6s" repeatCount="indefinite" begin="0s"/></circle>
+      <circle cy="26" r="5" fill="#C08830"><animate attributeName="cx" from="197" to="278" dur="1.6s" repeatCount="indefinite" begin="-0.4s"/></circle>
+      <circle cy="26" r="5" fill="#C08830"><animate attributeName="cx" from="322" to="403" dur="1.6s" repeatCount="indefinite" begin="-0.8s"/></circle>
+      <circle cy="26" r="5" fill="#C08830"><animate attributeName="cx" from="447" to="528" dur="1.6s" repeatCount="indefinite" begin="-1.2s"/></circle>
+      <circle cx="50"  cy="26" r="22" fill="#FFFFFF" stroke="#ABABAB" stroke-width="1.5"/>
+      <circle cx="175" cy="26" r="22" fill="#FFFFFF" stroke="#ABABAB" stroke-width="1.5"/>
+      <circle cx="300" cy="26" r="22" fill="#FFFFFF" stroke="#ABABAB" stroke-width="1.5"/>
+      <circle cx="425" cy="26" r="22" fill="#FFFFFF" stroke="#ABABAB" stroke-width="1.5"/>
+      <circle cx="550" cy="26" r="22" fill="#FFFFFF" stroke="#ABABAB" stroke-width="1.5"/>
+      <text x="50"  y="31" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="13" font-weight="700" fill="#888888">①</text>
+      <text x="175" y="31" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="13" font-weight="700" fill="#888888">②</text>
+      <text x="300" y="31" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="13" font-weight="700" fill="#888888">③</text>
+      <text x="425" y="31" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="13" font-weight="700" fill="#888888">④</text>
+      <text x="550" y="31" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="13" font-weight="700" fill="#888888">⑤</text>
+      <text x="50"  y="62" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="7.5" font-weight="700" fill="#444444" style="letter-spacing:1.5px">DADOS</text>
+      <text x="175" y="62" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="7.5" font-weight="700" fill="#444444" style="letter-spacing:1px">DIAGNÓSTICO</text>
+      <text x="300" y="62" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="7.5" font-weight="700" fill="#444444" style="letter-spacing:1px">VALIDAÇÃO</text>
+      <text x="425" y="62" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="7.5" font-weight="700" fill="#444444" style="letter-spacing:1px">INVESTIGAÇÃO</text>
+      <text x="550" y="62" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="7.5" font-weight="700" fill="#444444" style="letter-spacing:1px">CAPTURA</text>
+      <text x="50"  y="75" text-anchor="middle" font-family="'Space Grotesk',sans-serif" font-size="9" fill="#ABABAB">Billing FOCUS</text>
+      <text x="50"  y="87" text-anchor="middle" font-family="'Space Grotesk',sans-serif" font-size="9" fill="#ABABAB">12 meses</text>
+      <text x="175" y="75" text-anchor="middle" font-family="'Space Grotesk',sans-serif" font-size="9" fill="#ABABAB">Mapa de</text>
+      <text x="175" y="87" text-anchor="middle" font-family="'Space Grotesk',sans-serif" font-size="9" fill="#ABABAB">lacunas</text>
+      <text x="300" y="75" text-anchor="middle" font-family="'Space Grotesk',sans-serif" font-size="9" fill="#ABABAB">Ponto focal</text>
+      <text x="300" y="87" text-anchor="middle" font-family="'Space Grotesk',sans-serif" font-size="9" fill="#ABABAB">de infra</text>
+      <text x="425" y="75" text-anchor="middle" font-family="'Space Grotesk',sans-serif" font-size="9" fill="#ABABAB">Evidence</text>
+      <text x="425" y="87" text-anchor="middle" font-family="'Space Grotesk',sans-serif" font-size="9" fill="#ABABAB">Cards</text>
+      <text x="550" y="75" text-anchor="middle" font-family="'Space Grotesk',sans-serif" font-size="9" fill="#ABABAB">Aceite do</text>
+      <text x="550" y="87" text-anchor="middle" font-family="'Space Grotesk',sans-serif" font-size="9" fill="#ABABAB">sponsor</text>
+    </svg>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════ S04 CONTA CRESCE -->
+<section class="slide" data-slide="3">
+<div class="slide-inner">
+  <div>
+    <div class="eyebrow animate delay-1">M1 · POR QUE AGORA</div>
+    <h2 class="slide-title animate delay-2" style="font-size:clamp(26px,3.4vw,42px);">O que acontece todo <span class="gradient-text">mês</span></h2>
+  </div>
+  <svg viewBox="0 0 560 140" width="100%" xmlns="http://www.w3.org/2000/svg" style="display:block;max-height:200px;" class="animate delay-2">
+    <path class="anim-fill" d="M 15,118 C 90,104 260,52 545,10 L 545,100 C 260,110 90,115 15,118 Z" fill="rgba(192,136,48,.09)"/>
+    <path class="anim-path" id="path-gasto" d="M 15,118 C 90,104 260,52 545,10" fill="none" stroke="#C08830" stroke-width="2.5" stroke-linecap="round"/>
+    <path class="anim-path" id="path-cap"   d="M 15,118 C 90,116 260,110 545,100" fill="none" stroke="#ABABAB" stroke-width="2" stroke-linecap="round"/>
+    <g class="anim-label">
+      <rect x="10" y="6"  width="18" height="2.5" rx="1.25" fill="#C08830"/>
+      <text x="34" y="11" font-family="'Space Grotesk',sans-serif" font-size="10" font-weight="600" fill="#C08830">Gasto em nuvem</text>
+      <rect x="10" y="20" width="18" height="2.5" rx="1.25" fill="#ABABAB"/>
+      <text x="34" y="25" font-family="'Space Grotesk',sans-serif" font-size="10" fill="#888888">Capacidade de explicar o gasto</text>
+    </g>
+    <text class="anim-label" x="310" y="76" text-anchor="middle" font-family="'Space Grotesk',sans-serif" font-size="12" font-style="italic" fill="#ABABAB">a lacuna</text>
+  </svg>
+  <blockquote class="chart-quote animate delay-4">
+    "Ninguém aprova uma nota fiscal que não entende. Mas a nuvem manda uma todo mês — e ela é aprovada."
+  </blockquote>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════ S05 FINOPS -->
+<section class="slide" data-slide="4">
+<div class="slide-inner">
+  <div class="animate delay-1">
+    <div class="eyebrow">M1 · POR QUE AGORA</div>
+    <p class="phase-statement">FinOps não é <span class="gradient-text">corte de custo</span>.</p>
+    <p class="phase-sub">É atribuição de responsabilidade sobre um gasto variável.</p>
+  </div>
+  <div class="comp-grid-3 animate delay-2">
+    <div class="comp-card highlighted">
+      <div class="phase-num">①</div>
+      <div class="phase-name">INFORMAR</div>
+      <div class="phase-desc">Quem consome o quê, e quanto isso custa</div>
+    </div>
+    <div class="comp-card">
+      <div class="phase-num" style="opacity:.6">②</div>
+      <div class="phase-name">OTIMIZAR</div>
+      <div class="phase-desc">O que dá para reduzir sem perder capacidade</div>
+    </div>
+    <div class="comp-card">
+      <div class="phase-num" style="opacity:.6">③</div>
+      <div class="phase-name">OPERAR</div>
+      <div class="phase-desc">Como impedir que volte</div>
+    </div>
+  </div>
+  <p class="phase-quote animate delay-4">→ "Otimizar é a segunda fase. Não a primeira."</p>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════ S06 STATS 2026 -->
+<section class="slide" data-slide="5">
+<div class="slide-inner">
+  <div>
+    <div class="eyebrow animate delay-1">M1 · POR QUE AGORA</div>
+    <h2 class="slide-title animate delay-2" style="font-size:clamp(24px,3.2vw,40px);">O que mudou em <span class="gradient-text">2026</span></h2>
+  </div>
+  <div class="stats-grid animate delay-2">
+    <div class="stat-block">
+      <div class="stat-num stat-hero" data-count="98" data-suffix="%">98%</div>
+      <div class="stat-ctx">das organizações gerenciam ativamente custos de IA</div>
+      <div class="stat-trend">era 63% em 2025 · 31% em 2024</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-num stat-sec" data-count="78" data-suffix="%">78%</div>
+      <div class="stat-ctx">das práticas de FinOps reportam ao CTO ou CIO</div>
+    </div>
+    <div class="t-card">
+      <div class="t-mark">"</div>
+      <p class="t-text">As grandes pedras de desperdício já foram atingidas. O que restou é volume — e exige mais esforço para capturar.</p>
+      <div class="t-src">FinOps Foundation · State of FinOps 2026</div>
+    </div>
+  </div>
+  <div class="section-label animate delay-4">Fonte: data.finops.org · State of FinOps 2026</div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════ S07 IDIOMA -->
+<section class="slide" data-slide="6">
+<div class="slide-inner" style="gap:14px;">
+  <div>
+    <div class="eyebrow animate delay-1">M2 · POR QUE FOCUS</div>
+    <h2 class="slide-title animate delay-2" style="font-size:clamp(22px,3vw,38px);">A mesma pergunta, <span class="gradient-text">quatro idiomas</span></h2>
+    <p class="lang-q animate delay-2">"Quanto custou o serviço X no mês passado?"</p>
+  </div>
+  <div class="animate delay-2">
+    <table class="ft">
+      <thead>
+        <tr><th></th><th>AZURE</th><th>AWS</th><th>GCP</th><th>OCI</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>CUSTO</td><td>CostInBillingCurrency</td><td>lineItem/UnblendedCost</td><td>cost</td><td>cost/myCost</td></tr>
+        <tr><td>PERÍODO</td><td>BillingPeriodStartDate</td><td>bill/BillingPeriodStartDate</td><td>invoice.month</td><td>lineItem/intervalUsageStart</td></tr>
+        <tr><td>SERVIÇO</td><td>MeterCategory</td><td>lineItem/ProductCode</td><td>service.description</td><td>product/service</td></tr>
+        <tr><td>CONTA</td><td>SubscriptionId</td><td>lineItem/UsageAccountId</td><td>project.id</td><td>lineItem/tenantId</td></tr>
+        <tr><td>QTDE</td><td>Quantity</td><td>lineItem/UsageAmount</td><td>usage.amount</td><td>usage/billedQuantity</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="lang-alert animate delay-5">
+    <span class="lang-alert-ico">⚠</span>
+    <span class="lang-alert-txt">E os nomes são o problema <em>menor</em>.</span>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════ S08 FOCUS -->
+<section class="slide" data-slide="7">
+<div class="slide-inner" style="gap:20px;">
+  <div>
+    <div class="eyebrow animate delay-1">M2 · A TRADUÇÃO</div>
+    <h2 class="slide-title animate delay-2" style="font-size:clamp(32px,4.5vw,60px);letter-spacing:-1.5px;margin-bottom:4px;">FOCUS</h2>
+    <p class="section-label animate delay-2">FinOps Open Cost and Usage Specification</p>
+  </div>
+  <div class="animate delay-2">
+    <svg viewBox="0 0 570 148" width="100%" xmlns="http://www.w3.org/2000/svg" style="display:block;max-height:210px;">
+      <rect x="0"   y="0"   width="120" height="28" rx="6" fill="#FFFFFF" stroke="#C0C1BF" stroke-width="1"/>
+      <text x="60"  y="18.5" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10.5" font-weight="700" fill="#444444" style="letter-spacing:1.5px">AZURE</text>
+      <rect x="0"   y="40"  width="120" height="28" rx="6" fill="#FFFFFF" stroke="#C0C1BF" stroke-width="1"/>
+      <text x="60"  y="58.5" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10.5" font-weight="700" fill="#444444" style="letter-spacing:1.5px">AWS</text>
+      <rect x="0"   y="80"  width="120" height="28" rx="6" fill="#FFFFFF" stroke="#C0C1BF" stroke-width="1"/>
+      <text x="60"  y="98.5" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10.5" font-weight="700" fill="#444444" style="letter-spacing:1.5px">GCP</text>
+      <rect x="0"   y="120" width="120" height="28" rx="6" fill="#FFFFFF" stroke="#C0C1BF" stroke-width="1"/>
+      <text x="60"  y="138.5" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10.5" font-weight="700" fill="#444444" style="letter-spacing:1.5px">OCI</text>
+      <path d="M 120,14  C 172,14  172,71 220,71" stroke="#C0C1BF" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <path d="M 120,54  C 172,54  172,71 220,71" stroke="#C0C1BF" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <path d="M 120,94  C 172,94  172,71 220,71" stroke="#C0C1BF" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <path d="M 120,134 C 172,134 172,71 220,71" stroke="#C0C1BF" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <circle r="5" fill="#0078D4" opacity="0.9"><animateMotion path="M 120,14 C 172,14 172,71 220,71" dur="2.2s" repeatCount="indefinite" begin="0s"/></circle>
+      <circle r="5" fill="#FF9900" opacity="0.9"><animateMotion path="M 120,54 C 172,54 172,71 220,71" dur="2.2s" repeatCount="indefinite" begin="-0.55s"/></circle>
+      <circle r="5" fill="#34A853" opacity="0.9"><animateMotion path="M 120,94 C 172,94 172,71 220,71" dur="2.2s" repeatCount="indefinite" begin="-1.1s"/></circle>
+      <circle r="5" fill="#C74634" opacity="0.9"><animateMotion path="M 120,134 C 172,134 172,71 220,71" dur="2.2s" repeatCount="indefinite" begin="-1.65s"/></circle>
+      <rect x="220" y="22" width="140" height="98" rx="14" fill="#C08830"/>
+      <text x="290" y="66" text-anchor="middle" font-family="'Space Grotesk',sans-serif" font-size="24" font-weight="800" fill="#FFFFFF">FOCUS</text>
+      <text x="290" y="85" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="8" fill="rgba(255,255,255,.65)" style="letter-spacing:1.5px">SCHEMA ÚNICO</text>
+      <line x1="360" y1="71" x2="404" y2="71" stroke="#C08830" stroke-width="2.5" stroke-linecap="round"/>
+      <polygon points="404,66.5 404,75.5 418,71" fill="#C08830"/>
+      <text x="428" y="63" font-family="'Space Grotesk',sans-serif" font-size="16" font-weight="800" fill="#0F0F0F">Uma pergunta.</text>
+      <text x="428" y="85" font-family="'Space Grotesk',sans-serif" font-size="16" font-weight="800" fill="#0F0F0F">Uma resposta.</text>
+    </svg>
+  </div>
+  <div class="animate delay-3">
+    <p class="section-label" style="margin-bottom:10px;">Especificação aberta · FinOps Foundation · Linux Foundation</p>
+    <blockquote style="border-left:2.5px solid var(--brand-primary);padding-left:16px;font-size:15px;color:var(--text-secondary);font-style:italic;line-height:1.6;">
+      "Não pedimos que vocês adotem a linguagem da finCodex. Pedimos que usem a linguagem que as próprias nuvens já adotaram."
+    </blockquote>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════ S09 ECOSSISTEMA -->
+<section class="slide" data-slide="8">
+<div class="slide-inner" style="gap:12px;">
+  <div>
+    <div class="eyebrow animate delay-1">M2 · ECOSSISTEMA</div>
+    <h2 class="slide-title animate delay-2" style="font-size:clamp(24px,3.2vw,40px);">Quem já fala <span class="gradient-text">FOCUS</span></h2>
+  </div>
+  <div class="eco-pills animate delay-2">
+    <span class="eco-pill">AWS</span>
+    <span class="eco-pill">Microsoft Azure</span>
+    <span class="eco-pill">Google Cloud</span>
+    <span class="eco-pill">Oracle Cloud</span>
+    <span class="eco-pill">Alibaba Cloud</span>
+    <span class="eco-pill">Databricks</span>
+    <span class="eco-pill">Grafana</span>
+  </div>
+  <div class="eco-div animate delay-2"></div>
+  <div class="animate delay-3">
+    <div class="tl-row"><div class="tl-v">1.0</div><div class="tl-d">jun/2024</div><div class="tl-x">Padronização do billing de nuvem</div></div>
+    <div class="tl-row"><div class="tl-v">1.1</div><div class="tl-d">nov/2024</div><div class="tl-x">Análise multi-cloud granular</div></div>
+    <div class="tl-row"><div class="tl-v">1.2</div><div class="tl-d">mai/2025</div><div class="tl-x">SaaS e PaaS no mesmo schema</div></div>
+    <div class="tl-row"><div class="tl-v">1.3</div><div class="tl-d">dez/2025</div><div class="tl-x">Compromissos contratuais · recência e completude</div></div>
+    <div class="tl-row"><div class="tl-v">1.4</div><div class="tl-d">jun/2026</div><div class="tl-x">Reconciliação com a fatura · +47 colunas</div></div>
+    <div class="tl-row tl-proj"><div class="tl-v">1.5</div><div class="tl-d">em curso →</div><div class="tl-x">Economia de tokens de IA · price sheet<span class="proj-badge">EM CURSO</span></div></div>
+  </div>
+  <div class="eco-tagline animate delay-5">Cinco versões em dois anos. Comitê de direção. Programa de conformidade.</div>
+</div>
+</section>
+
+
+<!-- ═══════════════════════════ S10 ÂNCORA ① -->
+<section class="slide" data-slide="9">
+<div class="slide-inner">
+  <div>
+    <div class="eyebrow animate delay-1">M3 · A JORNADA</div>
+    <h2 class="slide-title animate delay-2" style="font-size:clamp(28px,3.5vw,44px);">A <span class="gradient-text">jornada</span></h2>
+  </div>
+  <div class="animate delay-3">
+    <svg viewBox="0 0 600 108" width="100%" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;">
+      <line x1="72" y1="26" x2="153" y2="26" stroke="#C08830" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+      <line x1="197" y1="26" x2="278" y2="26" stroke="#C0C1BF" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="322" y1="26" x2="403" y2="26" stroke="#C0C1BF" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="447" y1="26" x2="528" y2="26" stroke="#C0C1BF" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cy="26" r="5" fill="#C08830"><animate attributeName="cx" from="72" to="153" dur="1.6s" repeatCount="indefinite" begin="0s"/></circle>
+      <!-- Nó ① ATIVO -->
+      <circle cx="50" cy="26" r="22" fill="rgba(192,136,48,0.12)" stroke="#C08830" stroke-width="2"/>
+      <circle cx="50" cy="26" r="28" fill="none" stroke="rgba(192,136,48,0.18)" stroke-width="1"/>
+      <text x="50" y="31" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="13" font-weight="700" fill="#C08830">①</text>
+      <!-- Nós inativos -->
+      <circle cx="175" cy="26" r="22" fill="#FFFFFF" stroke="#C0C1BF" stroke-width="1.5"/>
+      <circle cx="300" cy="26" r="22" fill="#FFFFFF" stroke="#C0C1BF" stroke-width="1.5"/>
+      <circle cx="425" cy="26" r="22" fill="#FFFFFF" stroke="#C0C1BF" stroke-width="1.5"/>
+      <circle cx="550" cy="26" r="22" fill="#FFFFFF" stroke="#C0C1BF" stroke-width="1.5"/>
+      <text x="175" y="31" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="13" font-weight="700" fill="#888888">②</text>
+      <text x="300" y="31" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="13" font-weight="700" fill="#888888">③</text>
+      <text x="425" y="31" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="13" font-weight="700" fill="#888888">④</text>
+      <text x="550" y="31" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="13" font-weight="700" fill="#888888">⑤</text>
+      <text x="50"  y="62" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="7.5" font-weight="700" fill="#C08830" style="letter-spacing:1.5px">DADOS</text>
+      <text x="175" y="62" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="7.5" font-weight="700" fill="#888888" style="letter-spacing:1px">DIAGNÓSTICO</text>
+      <text x="300" y="62" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="7.5" font-weight="700" fill="#888888" style="letter-spacing:1px">VALIDAÇÃO</text>
+      <text x="425" y="62" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="7.5" font-weight="700" fill="#888888" style="letter-spacing:1px">INVESTIGAÇÃO</text>
+      <text x="550" y="62" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="7.5" font-weight="700" fill="#888888" style="letter-spacing:1px">CAPTURA</text>
+      <text x="50"  y="78" text-anchor="middle" font-family="'Space Grotesk',sans-serif" font-size="9" fill="#C08830" opacity="0.8">Billing FOCUS</text>
+      <text x="50"  y="90" text-anchor="middle" font-family="'Space Grotesk',sans-serif" font-size="9" fill="#C08830" opacity="0.8">12 meses</text>
+      <text x="175" y="78" text-anchor="middle" font-family="'Space Grotesk',sans-serif" font-size="9" fill="#ABABAB">Mapa de</text>
+      <text x="175" y="90" text-anchor="middle" font-family="'Space Grotesk',sans-serif" font-size="9" fill="#ABABAB">lacunas</text>
+      <text x="300" y="78" text-anchor="middle" font-family="'Space Grotesk',sans-serif" font-size="9" fill="#ABABAB">Ponto focal</text>
+      <text x="300" y="90" text-anchor="middle" font-family="'Space Grotesk',sans-serif" font-size="9" fill="#ABABAB">de infra</text>
+      <text x="425" y="78" text-anchor="middle" font-family="'Space Grotesk',sans-serif" font-size="9" fill="#ABABAB">Evidence</text>
+      <text x="425" y="90" text-anchor="middle" font-family="'Space Grotesk',sans-serif" font-size="9" fill="#ABABAB">Cards</text>
+      <text x="550" y="78" text-anchor="middle" font-family="'Space Grotesk',sans-serif" font-size="9" fill="#ABABAB">Aceite do</text>
+      <text x="550" y="90" text-anchor="middle" font-family="'Space Grotesk',sans-serif" font-size="9" fill="#ABABAB">sponsor</text>
+      <text x="50" y="105" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="8" fill="#C08830" style="letter-spacing:0.5px">↑ você está aqui</text>
+    </svg>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════ S11 PEDIDO -->
+<section class="slide" data-slide="10">
+<div class="slide-inner" style="gap:18px;">
+  <div>
+    <div class="eyebrow animate delay-1">M3 · A JORNADA</div>
+    <h2 class="slide-title animate delay-2" style="font-size:clamp(24px,3.2vw,42px);">O <span class="gradient-text">pedido</span></h2>
+  </div>
+  <div class="req-card animate delay-2">
+    <p class="req-main">12 meses de billing em formato FOCUS</p>
+    <p class="req-sub">— um export por provedor</p>
+  </div>
+  <div class="animate delay-3">
+    <div class="why-lbl">Por que 12 meses?</div>
+    <div class="bullets" style="margin-top:10px;">
+      <div class="bullet">Separar crescimento de sazonalidade</div>
+      <div class="bullet">Identificar tendência, não fotografia</div>
+      <div class="bullet">Base mínima para previsão</div>
+    </div>
+  </div>
+  <div class="note-d animate delay-4">Se o export FOCUS ainda não estiver habilitado, é configuração de console. Nós orientamos.</div>
+</div>
+</section>
+
+<!-- ═══════════════════════════ S12 ISOLAMENTO -->
+<section class="slide" data-slide="11">
+<div class="slide-inner" style="gap:16px;">
+  <div>
+    <div class="eyebrow animate delay-1">M3 · A JORNADA</div>
+    <h2 class="slide-title animate delay-2" style="font-size:clamp(22px,3vw,38px);">Como tratamos o dado de vocês</h2>
+  </div>
+  <div class="animate delay-2">
+    <svg viewBox="0 0 570 96" width="100%" xmlns="http://www.w3.org/2000/svg" style="display:block;">
+      <line x1="0" y1="32" x2="570" y2="32" stroke="var(--brand-border)" stroke-width="0.5" stroke-dasharray="4 4"/>
+      <line x1="0" y1="64" x2="570" y2="64" stroke="var(--brand-border)" stroke-width="0.5" stroke-dasharray="4 4"/>
+      <!-- Trilha A -->
+      <rect x="0" y="4" width="90" height="24" rx="6" fill="var(--brand-surface)" stroke="var(--brand-border)" stroke-width="1"/>
+      <text x="45" y="20.5" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9.5" font-weight="600" fill="var(--text-secondary)">Cliente A</text>
+      <line x1="90" y1="16" x2="154" y2="16" stroke="var(--brand-border-hi)" stroke-width="1.5" stroke-linecap="round"/>
+      <polygon points="154,12 154,20 162,16" fill="var(--brand-border-hi)"/>
+      <rect x="162" y="4" width="110" height="24" rx="6" fill="var(--brand-surface)" stroke="var(--brand-border)" stroke-width="1"/>
+      <text x="217" y="20.5" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9.5" font-weight="600" fill="var(--text-secondary)">pipeline A</text>
+      <line x1="272" y1="16" x2="336" y2="16" stroke="var(--brand-border-hi)" stroke-width="1.5" stroke-linecap="round"/>
+      <polygon points="336,12 336,20 344,16" fill="var(--brand-border-hi)"/>
+      <rect x="344" y="4" width="80" height="24" rx="6" fill="var(--brand-surface)" stroke="var(--brand-primary)" stroke-width="1.5"/>
+      <text x="384" y="20.5" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9.5" font-weight="600" fill="var(--brand-primary)">base A</text>
+      <!-- Trilha B -->
+      <rect x="0" y="36" width="90" height="24" rx="6" fill="var(--brand-surface)" stroke="var(--brand-border)" stroke-width="1"/>
+      <text x="45" y="52.5" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9.5" font-weight="600" fill="var(--text-secondary)">Cliente B</text>
+      <line x1="90" y1="48" x2="154" y2="48" stroke="var(--brand-border-hi)" stroke-width="1.5" stroke-linecap="round"/>
+      <polygon points="154,44 154,52 162,48" fill="var(--brand-border-hi)"/>
+      <rect x="162" y="36" width="110" height="24" rx="6" fill="var(--brand-surface)" stroke="var(--brand-border)" stroke-width="1"/>
+      <text x="217" y="52.5" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9.5" font-weight="600" fill="var(--text-secondary)">pipeline B</text>
+      <line x1="272" y1="48" x2="336" y2="48" stroke="var(--brand-border-hi)" stroke-width="1.5" stroke-linecap="round"/>
+      <polygon points="336,44 336,52 344,48" fill="var(--brand-border-hi)"/>
+      <rect x="344" y="36" width="80" height="24" rx="6" fill="var(--brand-surface)" stroke="var(--brand-primary)" stroke-width="1.5"/>
+      <text x="384" y="52.5" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9.5" font-weight="600" fill="var(--brand-primary)">base B</text>
+      <!-- Trilha C -->
+      <rect x="0" y="68" width="90" height="24" rx="6" fill="var(--brand-surface)" stroke="var(--brand-border)" stroke-width="1"/>
+      <text x="45" y="84.5" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9.5" font-weight="600" fill="var(--text-secondary)">Cliente C</text>
+      <line x1="90" y1="80" x2="154" y2="80" stroke="var(--brand-border-hi)" stroke-width="1.5" stroke-linecap="round"/>
+      <polygon points="154,76 154,84 162,80" fill="var(--brand-border-hi)"/>
+      <rect x="162" y="68" width="110" height="24" rx="6" fill="var(--brand-surface)" stroke="var(--brand-border)" stroke-width="1"/>
+      <text x="217" y="84.5" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9.5" font-weight="600" fill="var(--text-secondary)">pipeline C</text>
+      <line x1="272" y1="80" x2="336" y2="80" stroke="var(--brand-border-hi)" stroke-width="1.5" stroke-linecap="round"/>
+      <polygon points="336,76 336,84 344,80" fill="var(--brand-border-hi)"/>
+      <rect x="344" y="68" width="80" height="24" rx="6" fill="var(--brand-surface)" stroke="var(--brand-primary)" stroke-width="1.5"/>
+      <text x="384" y="84.5" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9.5" font-weight="600" fill="var(--brand-primary)">base C</text>
+      <!-- Dots animados — trilhas A/B/C -->
+      <circle r="4" fill="#C08830" opacity="0.8"><animateMotion path="M 90,16 L 154,16" dur="1.1s" repeatCount="indefinite" begin="0s"/></circle>
+      <circle r="4" fill="#C08830" opacity="0.8"><animateMotion path="M 272,16 L 336,16" dur="1.1s" repeatCount="indefinite" begin="-0.3s"/></circle>
+      <circle r="4" fill="#C08830" opacity="0.8"><animateMotion path="M 90,48 L 154,48" dur="1.1s" repeatCount="indefinite" begin="-0.55s"/></circle>
+      <circle r="4" fill="#C08830" opacity="0.8"><animateMotion path="M 272,48 L 336,48" dur="1.1s" repeatCount="indefinite" begin="-0.85s"/></circle>
+      <circle r="4" fill="#C08830" opacity="0.8"><animateMotion path="M 90,80 L 154,80" dur="1.1s" repeatCount="indefinite" begin="-1.1s"/></circle>
+      <circle r="4" fill="#C08830" opacity="0.8"><animateMotion path="M 272,80 L 336,80" dur="1.1s" repeatCount="indefinite" begin="-1.4s"/></circle>
+    </svg>
+  </div>
+  <div class="animate delay-3" style="display:flex;gap:20px;flex-wrap:wrap;">
+    <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-secondary);"><span style="font-size:14px;font-weight:700;color:#C0392B;">✕</span> sem base compartilhada</div>
+    <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-secondary);"><span style="font-size:14px;font-weight:700;color:#C0392B;">✕</span> sem cruzamento entre clientes</div>
+    <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-secondary);"><span style="font-size:14px;font-weight:700;color:#C0392B;">✕</span> sem benchmark sem consentimento</div>
+  </div>
+  <div class="animate delay-4" style="border-left:2.5px solid var(--brand-primary);padding-left:14px;font-size:14px;color:var(--text-secondary);line-height:1.5;">
+    O billing FOCUS não contém dado pessoal. É infraestrutura, serviço, quantidade e custo.<br>
+    <span style="opacity:0.7;font-style:italic;">Isso não é uma promessa. É uma decisão de arquitetura.</span>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════ S13 CAIXA -->
+<section class="slide" data-slide="12">
+<div class="slide-inner" style="gap:20px;">
+  <div>
+    <div class="eyebrow animate delay-1">M3 · A JORNADA</div>
+    <h2 class="slide-title animate delay-2" style="font-size:clamp(24px,3.2vw,40px);">Da fatura à base <span class="gradient-text">analítica</span></h2>
+  </div>
+  <div class="steps animate delay-2">
+    <div class="step"><div class="step-num">①</div><div class="step-name">RECEBIMENTO</div><div class="step-desc">CSV ou Parquet, qualquer estrutura de pastas</div></div>
+    <div class="step-arr">→</div>
+    <div class="step"><div class="step-num">②</div><div class="step-name">DETECÇÃO</div><div class="step-desc">Identifica a versão FOCUS de cada arquivo</div></div>
+    <div class="step-arr">→</div>
+    <div class="step"><div class="step-num">③</div><div class="step-name">NORMALIZAÇÃO</div><div class="step-desc">Converte para base analítica única</div></div>
+    <div class="step-arr">→</div>
+    <div class="step"><div class="step-num">④</div><div class="step-name">CONSULTA</div><div class="step-desc">Multi-cloud, em segundos</div></div>
+  </div>
+  <div class="hero-div animate delay-3"></div>
+  <div class="hero-block animate delay-3">
+    <div class="hero-num">195M</div>
+    <div class="hero-unit">linhas de billing · consulta em segundos</div>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════ S14 C1/C2/C3 -->
+<section class="slide" data-slide="13">
+<div class="slide-inner" style="gap:16px;">
+  <div>
+    <div class="eyebrow animate delay-1">M3 · A JORNADA</div>
+    <h2 class="slide-title animate delay-2" style="font-size:clamp(22px,3vw,38px);">Antes de economizar: <span class="gradient-text">quem consome?</span></h2>
+    <p class="section-label animate delay-2" style="margin-top:6px;">exemplo ilustrativo — padrão de mercado</p>
+  </div>
+  <div class="bar-rows animate delay-2">
+    <div class="bar-row">
+      <div class="bar-hdr"><span class="bar-cat" style="color:#276747;">C1</span><span class="bar-desc">Sei exatamente qual aplicação consome</span><span class="bar-pct" style="color:#276747;">28%</span></div>
+      <div class="bar-track" style="height:12px;"><div class="bar-fill" style="width:28%;background:#276747;"></div></div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-hdr"><span class="bar-cat" style="color:#888888;">C2</span><span class="bar-desc">Sei o domínio, não a aplicação</span><span class="bar-pct" style="color:#888888;">34%</span></div>
+      <div class="bar-track" style="height:12px;"><div class="bar-fill" style="width:34%;background:#888888;"></div></div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-hdr"><span class="bar-cat" style="color:#C0392B;font-size:16px;">C3</span><span class="bar-desc" style="color:var(--text-primary);font-weight:600;">Não sei quem usa</span><span class="bar-pct" style="color:#C0392B;font-size:18px;">38%</span></div>
+      <div class="bar-track" style="height:16px;"><div class="bar-fill" style="width:38%;background:#C0392B;"></div></div>
+    </div>
+  </div>
+  <blockquote class="bar-quote animate delay-4">"A maior fatia costuma estar na camada onde ninguém consegue apontar o dono."</blockquote>
+</div>
+</section>
+
+<!-- ═══════════════════════════ S15 ONE PAGE -->
+<section class="slide" data-slide="14">
+<div class="slide-inner" style="gap:14px;">
+  <div>
+    <div class="eyebrow animate delay-1">M3 · A JORNADA</div>
+    <h2 class="slide-title animate delay-2" style="font-size:clamp(22px,3vw,38px);">Primeira <span class="gradient-text">devolutiva</span></h2>
+  </div>
+  <div class="op-grid animate delay-2">
+    <div class="op-card">
+      <div class="op-hdr"><div class="op-ttl">Fictícios Company · Diagnóstico FinOps AWS</div><div class="op-sbttl">Out/25 – Jul/26 · Amazon Web Services · Indústria alimentícia</div></div>
+      <div class="op-kgrid">
+        <div class="op-k"><div class="op-kv">USD 235,2k</div><div class="op-ks">10 meses · AWS</div></div>
+        <div class="op-k"><div class="op-kv">2,3M</div><div class="op-ks">linhas de billing</div></div>
+        <div class="op-k"><div class="op-kv">14</div><div class="op-ks">subscriptions</div></div>
+        <div class="op-k"><div class="op-kv" style="color:#8C7800;">CRAWL</div><div class="op-ks">maturidade</div></div>
+      </div>
+      <div class="op-dv"></div>
+      <div class="op-sg" style="position:relative;">
+        <div class="op-sv"><div class="op-svl">Saving conservador / ano</div><div class="op-svv">USD 68,6k</div><div class="op-svs">estimativa mínima (24,3%)</div></div>
+        <div class="op-sv hl"><div class="op-svl">Saving potencial / ano</div><div class="op-svv ol">USD 103,2k</div><div class="op-svs">estimativa máxima (36,6%)</div></div>
+        <div class="cn cn-2" style="top:-10px;right:-10px;">②</div>
+      </div>
+      <div class="op-dv"></div>
+
+      <div style="position:relative;">
+      <div class="cn cn-4" style="top:-10px;right:-10px;">④</div>
+      <div class="op-sc-lbl">Scorecard de Maturidade FinOps</div>
+      <div class="op-sc-grid">
+        <div class="op-sc-card">
+          <div class="op-sc-dim">Alocação</div>
+          <div><span class="op-sc-b walk">WALK</span></div>
+          <div class="op-sc-ind"><strong>91,7%</strong><br>cobertura tag</div>
+        </div>
+        <div class="op-sc-card">
+          <div class="op-sc-dim">Commitments</div>
+          <div><span class="op-sc-b crawl">CRAWL</span></div>
+          <div class="op-sc-ind"><strong>SP</strong><br>sem uso</div>
+        </div>
+        <div class="op-sc-card">
+          <div class="op-sc-dim">Forecast</div>
+          <div><span class="op-sc-b crawl">CRAWL</span></div>
+          <div class="op-sc-ind"><strong>Sem</strong><br>baseline</div>
+        </div>
+        <div class="op-sc-card">
+          <div class="op-sc-dim">Anomalias</div>
+          <div><span class="op-sc-b crawl">CRAWL</span></div>
+          <div class="op-sc-ind"><strong>3 serviços</strong><br>sem alerta</div>
+        </div>
+        <div class="op-sc-card">
+          <div class="op-sc-dim">Otimização</div>
+          <div><span class="op-sc-b crawl">CRAWL</span></div>
+          <div class="op-sc-ind"><strong>13 gaps</strong><br>mapeados</div>
+        </div>
+        <div class="op-sc-card">
+          <div class="op-sc-dim">Governança</div>
+          <div><span class="op-sc-b crawl">CRAWL</span></div>
+          <div class="op-sc-ind"><strong>Processo</strong><br>informal</div>
+        </div>
+      </div>
+      <div class="op-sc-foot">
+        <div class="op-sc-foot-t">Nível geral: CRAWL</div>
+        <div class="op-sc-foot-d">Commitments, Anomalias, Otimização e Governança — gaps de atuação consultiva imediata · Alocação em Walk indica base de visibilidade já estabelecida</div>
+      </div>
+      </div>
+      <div class="op-dv"></div>
+      <div style="position:relative;">
+        <div class="op-hh">13 hipóteses identificadas</div>
+        <div class="cn cn-1" style="top:-10px;left:-10px;">①</div>
+        <div class="op-hr"><div class="op-hid">AW-H01</div><div class="op-ht">Commitments ociosos — SP não consumidos</div><div class="op-hrg">USD 18–28k</div></div>
+        <div class="op-hr" style="position:relative;"><div class="op-hid">AW-H02</div><div class="op-ht">Rightsizing RDS — instâncias flat 30d</div><div class="op-hrg">USD 12–18k</div><div class="cn cn-3" style="top:-8px;right:-10px;">③</div></div>
+        <div class="op-hr" style="opacity:.5;"><div class="op-hid">AW-H03</div><div class="op-ht">Backup sem lifecycle — crescimento 38%</div><div class="op-hrg">USD 8–14k</div></div>
+        <div style="font-size:8px;color:#ABABAB;margin-top:4px;font-family:'JetBrains Mono',monospace;">+ 10 hipóteses adicionais</div>
+      </div>
+    </div>
+    <div class="co-list">
+      <div class="co-item"><div class="co-n" style="background:#1B5E20;">①</div><div class="co-txt"><strong>13 hipóteses nominais</strong><br>não recomendações genéricas</div></div>
+      <div class="co-item"><div class="co-n" style="background:#276747;">②</div><div class="co-txt">Faixa de valor real<span class="co-val">USD 68,6k – 103,2k/ano</span></div></div>
+      <div class="co-item"><div class="co-n" style="background:#5A8040;">③</div><div class="co-txt">Cada uma com uma <strong>alavanca</strong> — o que muda no ambiente</div></div>
+      <div class="co-item"><div class="co-n" style="background:#C08830;">④</div><div class="co-txt"><strong>Avaliação em 6 dimensões</strong><br>scorecard de maturidade FinOps</div></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════ S16 ANATOMIA -->
+<section class="slide" data-slide="15">
+<div class="slide-inner" style="gap:14px;">
+  <div>
+    <div class="eyebrow animate delay-1">M3 · A JORNADA</div>
+    <h2 class="slide-title animate delay-2" style="font-size:clamp(22px,3vw,38px);">Anatomia de uma <span class="gradient-text">hipótese</span></h2>
+  </div>
+  <div class="hyp-card animate delay-2">
+    <div class="hyp-hdr"><div class="hyp-id">A3 · PRD-001</div><div class="hyp-status">EM VALIDAÇÃO</div></div>
+    <div class="hyp-rg"><div class="hyp-lb">ALAVANCA</div><div class="hyp-vl">Cluster policies — instance pools + auto-termination 30 min (Jobs Compute)</div></div>
+    <div class="hyp-rg faixa"><div class="hyp-lb">FAIXA</div><div class="hyp-vl fv">R$ 342k mín &nbsp;·&nbsp; R$ 513k máx / ano</div></div>
+    <div class="hyp-rg"><div class="hyp-lb">EVIDÊNCIA</div><div class="hyp-vl">12 meses de telemetria por workspace · Jobs Compute = 64% do workspace</div></div>
+    <div class="hyp-rg"><div class="hyp-lb">RESPONSÁVEL</div><div class="hyp-vl" style="color:var(--text-muted);">[ time de dados — Fictícios Company ]</div></div>
+  </div>
+  <div class="regra animate delay-5">
+    <div class="regra-lb">A REGRA DA CASA</div>
+    <p class="regra-t1">Nenhum número desta apresentação foi estimado. Todos vieram de consulta executada sobre o billing.</p>
+    <p class="regra-t2">Se não dá para rodar a consulta, o número não entra no slide.</p>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════ S17 ÂNCORA ③ -->
+<section class="slide" data-slide="16">
+<div class="slide-inner" style="gap:12px;">
+  <div>
+    <div class="eyebrow animate delay-1">M3 · A JORNADA</div>
+    <h2 class="slide-title animate delay-2" style="font-size:clamp(20px,2.8vw,36px);">Validação com o <span class="gradient-text">ponto focal</span></h2>
+  </div>
+  <div class="animate delay-2">
+    <svg viewBox="0 0 600 72" width="100%" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;">
+      <line x1="72" y1="22" x2="153" y2="22" stroke="#C08830" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+      <line x1="197" y1="22" x2="278" y2="22" stroke="#C08830" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+      <line x1="322" y1="22" x2="403" y2="22" stroke="#C0C1BF" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="447" y1="22" x2="528" y2="22" stroke="#C0C1BF" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cy="22" r="4" fill="#C08830" opacity="0.8"><animate attributeName="cx" from="72" to="153" dur="1.6s" repeatCount="indefinite" begin="0s"/></circle>
+      <circle cy="22" r="4" fill="#C08830" opacity="0.8"><animate attributeName="cx" from="197" to="278" dur="1.6s" repeatCount="indefinite" begin="-0.5s"/></circle>
+      <!-- ①② concluídos -->
+      <circle cx="50"  cy="22" r="22" fill="#C08830"/>
+      <circle cx="175" cy="22" r="22" fill="#C08830"/>
+      <text x="50"  y="27" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="13" font-weight="700" fill="#FFFFFF">①</text>
+      <text x="175" y="27" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="13" font-weight="700" fill="#FFFFFF">②</text>
+      <!-- ③ ativo -->
+      <circle cx="300" cy="22" r="22" fill="rgba(192,136,48,0.14)" stroke="#C08830" stroke-width="2"/>
+      <circle cx="300" cy="22" r="27" fill="none" stroke="rgba(192,136,48,0.18)" stroke-width="1"/>
+      <text x="300" y="27" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="13" font-weight="700" fill="#C08830">③</text>
+      <!-- ④⑤ inativos -->
+      <circle cx="425" cy="22" r="22" fill="#FFFFFF" stroke="#C0C1BF" stroke-width="1.5"/>
+      <circle cx="550" cy="22" r="22" fill="#FFFFFF" stroke="#C0C1BF" stroke-width="1.5"/>
+      <text x="425" y="27" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="13" font-weight="700" fill="#888888">④</text>
+      <text x="550" y="27" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="13" font-weight="700" fill="#888888">⑤</text>
+      <text x="50"  y="54" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="7.5" font-weight="700" fill="#C08830" style="letter-spacing:1.5px">DADOS</text>
+      <text x="175" y="54" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="7.5" font-weight="700" fill="#C08830" style="letter-spacing:1px">DIAGNÓSTICO</text>
+      <text x="300" y="54" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="7.5" font-weight="700" fill="#C08830" style="letter-spacing:1px">VALIDAÇÃO</text>
+      <text x="425" y="54" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="7.5" font-weight="700" fill="#888888" style="letter-spacing:1px">INVESTIGAÇÃO</text>
+      <text x="550" y="54" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="7.5" font-weight="700" fill="#888888" style="letter-spacing:1px">CAPTURA</text>
+      <text x="300" y="68" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="8" fill="#C08830" style="letter-spacing:0.5px">↑ a partir daqui, trabalho conjunto</text>
+    </svg>
+  </div>
+  <div class="funil-wrap animate delay-3">
+    <div class="funil-row"><div class="funil-bar" style="width:220px;"></div><span class="funil-txt">hipóteses levantadas</span></div>
+    <div class="funil-row"><div class="funil-bar" style="width:165px;"></div><span class="funil-txt">em validação</span></div>
+    <div class="funil-row"><div class="funil-bar" style="width:110px;"></div><span class="funil-txt" style="color:var(--text-muted);">...</span></div>
+  </div>
+  <div class="req2-card animate delay-4">
+    <div class="req2-hdr">O QUE PRECISAMOS DE VOCÊS</div>
+    <div class="req2-main">Um ponto focal de infraestrutura,<br>com agenda protegida.</div>
+    <div class="req2-sub">Não é dedicação integral. Mas é agenda que não some.</div>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════ S18 EVC -->
+<section class="slide" data-slide="17">
+<div class="slide-inner" style="gap:12px;">
+  <div>
+    <div class="eyebrow animate delay-1">M3 · A JORNADA</div>
+    <h2 class="slide-title animate delay-2" style="font-size:clamp(20px,2.8vw,36px);">Investigação profunda — o <span class="gradient-text">Evidence Card</span></h2>
+  </div>
+  <div class="evc animate delay-2">
+    <div class="evc-hdr">
+      <div class="evc-title">Evidence Card A3 — Databricks sem cluster policies · Fictícios Company · mai/2025–abr/2026</div>
+      <div class="evc-badge">AZURE</div>
+    </div>
+    <div class="evc-stats">
+      <div><div class="evc-sv">9</div><div class="evc-sl">workspaces (diagnóstico: 2)</div></div>
+      <div><div class="evc-sv">R$ 3,29M</div><div class="evc-sl">total 12 meses</div></div>
+      <div><div class="evc-sv">R$ 660k–1M</div><div class="evc-sl">economia potencial</div></div>
+    </div>
+    <table class="evc-t">
+      <thead><tr><th>WORKSPACE</th><th>ALAVANCA</th><th>SAVING / ANO</th><th>PRAZO</th></tr></thead>
+      <tbody>
+        <tr><td>adb-fict-dev-001</td><td>Auto-termination + budget alert</td><td class="sg">R$ 300–430k</td><td>15d</td></tr>
+        <tr class="prd001" style="position:relative;"><td class="ws">PRD-001 · Jobs</td><td>Cluster policies + instance pools</td><td class="sg">R$ 220–342k</td><td>30d</td><div class="prd-badge">← S16</div></tr>
+        <tr class="prd001"><td class="ws">PRD-001 · All-purpose</td><td>Auto-termination + cluster sharing</td><td class="sg">R$ 92–138k</td><td>30d</td></tr>
+        <tr><td style="color:#555E72;">adb-fict-ai-dev*</td><td style="color:#555E72;">Budget cap R$ 20k/mês · AI crescendo</td><td class="sa">a quantificar</td><td>30d</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="asks animate delay-3">
+    <div class="ask-i">Telemetria de CPU e memória</div>
+    <div class="ask-i">Logs de rede</div>
+    <div class="ask-i">Configuração de firewall e retenção</div>
+    <div class="ask-i">Documentação de arquitetura</div>
+  </div>
+  <div class="cb-q animate delay-4">"Lembram da hipótese do slide anterior? Foi aqui que ela nasceu."</div>
+</div>
+</section>
+
+<!-- ═══════════════════════════ S19 DOIS ACEITES -->
+<section class="slide" data-slide="18">
+<div class="slide-inner" style="gap:14px;">
+  <div>
+    <div class="eyebrow animate delay-1">M3 · A JORNADA</div>
+    <h2 class="slide-title animate delay-2" style="font-size:clamp(24px,3.2vw,42px);">Dois aceites. <span class="gradient-text">Não um.</span></h2>
+  </div>
+  <div class="stamp-row animate delay-2">
+    <div class="stamp stamp-v">
+      <div class="stamp-ck" style="color:#276747;">✓</div>
+      <div class="stamp-lb" style="color:#276747;">VALIDADA</div>
+      <div class="stamp-who">Time técnico de infraestrutura</div>
+      <div class="stamp-q">"É verdadeiro e é executável."</div>
+    </div>
+    <div class="stamp-arr">→</div>
+    <div class="stamp stamp-c">
+      <div class="stamp-ck" style="color:var(--brand-primary);">✓✓</div>
+      <div class="stamp-lb" style="color:var(--brand-primary);">CAPTURADA</div>
+      <div class="stamp-who">Diretor da área · sponsor</div>
+      <div class="stamp-q">"Assumo o valor no orçamento."</div>
+    </div>
+  </div>
+  <div class="div-mid animate delay-3">
+    <div class="div-line"></div>
+    <div class="div-lb">E duas naturezas de valor — que não somamos</div>
+    <div class="div-line"></div>
+  </div>
+  <div class="def-grid animate delay-3">
+    <div class="def-block def-er">
+      <div class="def-lb def-lb-er">Economia realizada</div>
+      <div class="def-txt">A conta do mês que vem é menor</div>
+      <div class="def-sub">Aparece no razão contábil</div>
+    </div>
+    <div class="def-block def-ce">
+      <div class="def-lb def-lb-ce">Custo evitado</div>
+      <div class="def-txt">A conta não sobe como subiria</div>
+      <div class="def-sub">Legítimo — mas diferente</div>
+    </div>
+  </div>
+</div>
+</section>
+
+
+<!-- ═══════════════════════════════════ S20 PLACAR -->
+<section class="slide" data-slide="19">
+<div class="slide-inner" style="gap:14px;">
+  <div>
+    <div class="eyebrow animate delay-1">M4 · O QUE NOS DIFERENCIA</div>
+    <h2 class="slide-title animate delay-2" style="font-size:clamp(22px,3vw,38px);">Como vocês <span class="gradient-text">acompanham</span></h2>
+  </div>
+  <div class="kanban animate delay-2">
+    <div class="kb-col">
+      <div class="kb-hdr"><div class="kb-name">BACKLOG</div><div class="kb-count kb-count-0">0</div></div>
+      <div class="kb-body"><div style="font-size:8px;color:var(--text-muted);font-family:var(--font-mono);text-align:center;padding:4px 0;">—</div></div>
+    </div>
+    <div class="kb-col">
+      <div class="kb-hdr"><div class="kb-name">INVESTIGAÇÃO</div><div class="kb-count kb-count-inv">4</div></div>
+      <div class="kb-body">
+        <div class="hcard hcard-blk">⚠ AZ-H01-4</div>
+        <div class="hcard hcard-inv">AZ-H02-1</div>
+        <div class="hcard hcard-inv">AZ-H03</div>
+        <div class="hcard hcard-inv" style="opacity:.6">AZ-H05</div>
+      </div>
+    </div>
+    <div class="kb-col">
+      <div class="kb-hdr"><div class="kb-name">CONFIRMADA</div><div class="kb-count kb-count-conf">6</div></div>
+      <div class="kb-body">
+        <div class="hcard hcard-conf">AZ-H01-1</div>
+        <div class="hcard hcard-conf">AZ-H01-2</div>
+        <div class="hcard hcard-conf" style="opacity:.6">AZ-H01-3</div>
+        <div class="kb-more">+3 hipóteses</div>
+      </div>
+    </div>
+    <div class="kb-col">
+      <div class="kb-hdr"><div class="kb-name">CAPTURADA</div><div class="kb-count kb-count-cap">4</div></div>
+      <div class="kb-body">
+        <div class="hcard hcard-cap">AZ-H04 ✓</div>
+        <div class="hcard hcard-cap">AZ-H06 ✓</div>
+        <div class="hcard hcard-cap" style="opacity:.7">AZ-H07 ✓</div>
+        <div class="kb-more">+1 hipótese</div>
+      </div>
+    </div>
+  </div>
+  <div class="blk-alert animate delay-4">
+    <div class="blk-ico">⚠</div>
+    <div style="flex:1;">
+      <div><span class="blk-id">sub-AZ-H01-4</span><span class="blk-badge">BLOQUEADO 15d</span></div>
+      <div class="blk-desc">"Time Cliente buscando evidências para o evidence card"</div>
+      <div class="blk-own">→ bloqueio do nosso lado, não do time de vocês</div>
+    </div>
+  </div>
+  <p class="section-label animate delay-5">Atualizado ao longo do projeto · disponível a qualquer momento · inclusive os bloqueios do nosso lado.</p>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════ S21 FERRAMENTA -->
+<section class="slide" data-slide="20">
+<div class="slide-inner" style="gap:16px;">
+  <div>
+    <div class="eyebrow animate delay-1">M4 · O QUE NOS DIFERENCIA</div>
+    <h2 class="slide-title animate delay-2" style="font-size:clamp(22px,3vw,38px);">Não competimos com <span class="gradient-text">ferramenta</span></h2>
+  </div>
+  <div class="cmp-grid animate delay-2">
+    <div class="ch-row">
+      <div class="ch-left"><div class="ch-n ch-nl">Ferramenta de FinOps</div></div>
+      <div class="ch-mid-h"></div>
+      <div class="ch-right"><div class="ch-n ch-nr">finCodex FinOps Focus</div></div>
+    </div>
+    <div class="cr"><div class="cr-l">Gera recomendações continuamente</div><div class="cr-m">→</div><div class="cr-r">Persegue hipóteses até o aceite</div></div>
+    <div class="cr"><div class="cr-l">Fila que cresce mais rápido que a execução</div><div class="cr-m">→</div><div class="cr-r">Funil que fecha</div></div>
+    <div class="cr"><div class="cr-l">Otimiza o que enxerga no faturamento</div><div class="cr-m">→</div><div class="cr-r">Investiga o que não está no faturamento</div></div>
+    <div class="cr"><div class="cr-l">Sem interlocutor no time técnico</div><div class="cr-m">→</div><div class="cr-r">Grupo de trabalho com agenda</div></div>
+    <div class="cr metric">
+      <div class="cr-l"><span class="met-lbl">Métrica</span>economia identificada</div>
+      <div class="cr-m">→</div>
+      <div class="cr-r"><span class="met-lbl met-lbl-r">Métrica</span>valor capturado e assinado</div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════ S22 FUNIL -->
+<section class="slide" data-slide="21">
+<div class="slide-inner" style="gap:12px;">
+  <div>
+    <div class="eyebrow animate delay-1">M4 · O QUE NOS DIFERENCIA</div>
+    <h2 class="slide-title animate delay-2" style="font-size:clamp(22px,3vw,38px);">O funil em <span class="gradient-text">números reais</span></h2>
+    <p class="section-label animate delay-2" style="margin-top:4px;">Fictícios Company · Azure + OCI · engajamento em curso</p>
+  </div>
+  <div class="funnel animate delay-2">
+    <div class="f-row">
+      <div class="f-lbl" style="color:var(--text-muted);">LEVANTADAS</div>
+      <div class="f-bar-wrap"><div class="f-bar" style="width:100%;background:rgba(136,136,136,0.18);"></div></div>
+      <div class="f-stats"><span class="f-count" style="color:var(--text-muted);">35</span><span class="f-val">R$ 14,51M – 18,79M</span></div>
+    </div>
+    <div class="f-row">
+      <div class="f-lbl" style="color:var(--brand-primary);">EM INVESTIGAÇÃO</div>
+      <div class="f-bar-wrap"><div class="f-bar" style="width:68.6%;background:rgba(192,136,48,0.25);"></div></div>
+      <div class="f-stats"><span class="f-count" style="color:var(--brand-primary);">24</span><span class="f-val">R$ 10,53M – 11,62M</span></div>
+    </div>
+    <div class="f-row">
+      <div class="f-lbl" style="color:var(--brand-primary);">CONFIRMADAS</div>
+      <div class="f-bar-wrap"><div class="f-bar" style="width:48.6%;background:rgba(192,136,48,0.5);"></div></div>
+      <div class="f-stats"><span class="f-count" style="color:var(--brand-primary);">17</span><span class="f-val">R$ 4,82M – 5,37M</span></div>
+    </div>
+    <div class="f-row">
+      <div class="f-lbl" style="color:var(--brand-success);">CAPTURADAS</div>
+      <div class="f-bar-wrap"><div class="f-bar" style="width:28.6%;background:var(--brand-success);height:20px;border-radius:4px;"></div></div>
+      <div class="f-stats"><span class="f-count" style="color:var(--brand-success);">10</span><span class="f-val f-val-cap">R$ 3,21M – 3,63M</span></div>
+    </div>
+  </div>
+  <div class="rech-row animate delay-3">
+    <div class="rech-line"></div>
+    <div class="rech-txt">10 hipóteses rechaçadas (29%) — não são fracasso, são rigor.</div>
+    <div class="rech-line"></div>
+  </div>
+  <div class="animate delay-3">
+    <div class="why-hdr">Por que caem</div>
+    <div class="why-2col">
+      <div class="why-item"><span class="why-dot">·</span>Premissa não confirmada pela telemetria</div>
+      <div class="why-item"><span class="why-dot">·</span>Restrição técnica (contingência, compliance)</div>
+      <div class="why-item"><span class="why-dot">·</span>Decisão de negócio — custo aceito conscientemente</div>
+      <div class="why-item"><span class="why-dot">·</span>Já estava em execução pelo time</div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════ S23 CRONOGRAMA -->
+<section class="slide" data-slide="22">
+<div class="slide-inner" style="gap:14px;">
+  <div>
+    <div class="eyebrow animate delay-1">M5 · O CONVITE</div>
+    <h2 class="slide-title animate delay-2" style="font-size:clamp(22px,3vw,38px);">Como isso se <span class="gradient-text">organiza</span></h2>
+  </div>
+  <div class="sched animate delay-2">
+    <div class="sched-head"><div class="sh-cell">FASE</div><div class="sh-cell">DURAÇÃO</div><div class="sh-cell">DE VOCÊS PRECISAMOS DE</div></div>
+    <div class="sched-row">
+      <div class="ph-cell"><div class="ph-n ph-active">①</div><div class="ph-name">Dados</div></div>
+      <div class="dur-cell">1–2 dias</div>
+      <div class="needs-cell">Export FOCUS · 12 meses</div>
+    </div>
+    <div class="sched-row sched-nossa">
+      <div class="ph-cell"><div class="ph-n ph-neutral">②</div><div class="ph-name" style="color:var(--text-secondary);">Diagnóstico</div></div>
+      <div class="dur-cell">1 semana</div>
+      <div class="needs-cell"><span class="needs-none">— nossa entrega</span><span class="needs-tag">One Page</span></div>
+    </div>
+    <div class="sched-row">
+      <div class="ph-cell"><div class="ph-n ph-active">③</div><div class="ph-name">Validação</div></div>
+      <div class="dur-cell">1–2 semanas</div>
+      <div class="needs-cell">Ponto focal · agenda protegida</div>
+    </div>
+    <div class="sched-row">
+      <div class="ph-cell"><div class="ph-n ph-neutral">④</div><div class="ph-name" style="color:var(--text-secondary);">Investigação</div></div>
+      <div class="dur-cell" style="font-size:10px;">3–4 dias / hipótese</div>
+      <div class="needs-cell">Times técnicos · sob demanda</div>
+    </div>
+    <div class="sched-row">
+      <div class="ph-cell"><div class="ph-n ph-active">⑤</div><div class="ph-name">Captura</div></div>
+      <div class="dur-cell" style="font-size:10px;">contínua + 1 sem.</div>
+      <div class="needs-cell">Sponsor · diretor de área</div>
+    </div>
+  </div>
+  <div class="dev-card animate delay-4">
+    <div class="dev-arr">▸</div>
+    <div>
+      <div class="dev-main">Primeira devolutiva em ~2 semanas</div>
+      <div class="dev-sub">"Se não fizer sentido, a conversa acaba ali — e vocês ficam com o diagnóstico."</div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════ S24 O QUE FICA -->
+<section class="slide" data-slide="23">
+<div class="slide-inner" style="gap:18px;">
+  <div>
+    <div class="eyebrow animate delay-1">M5 · O CONVITE</div>
+    <h2 class="slide-title animate delay-2" style="font-size:clamp(22px,3vw,38px);">O que fica <span class="gradient-text">depois de nós</span></h2>
+  </div>
+  <div class="leg-grid animate delay-2">
+    <div class="leg-card">
+      <div class="leg-num">①</div>
+      <div class="leg-label">A BASE</div>
+      <div class="leg-desc">Billing multi-cloud em padrão aberto, reutilizável por qualquer ferramenta ou equipe</div>
+    </div>
+    <div class="leg-card">
+      <div class="leg-num">②</div>
+      <div class="leg-label">A TAXONOMIA</div>
+      <div class="leg-desc">Quem consome o quê — a camada C3 reduzida, o rateio virando medição</div>
+    </div>
+    <div class="leg-card">
+      <div class="leg-num">③</div>
+      <div class="leg-label">A ROTINA</div>
+      <div class="leg-desc">Governança de novos provisionamentos. Prevenção, não correção.</div>
+    </div>
+  </div>
+  <div class="final-quote animate delay-4">
+    <div class="fq-text">"O desperdício volta. O que impede a volta não é o corte — é a <span class="fq-em">rotina</span>."</div>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════ S25 O CONVITE -->
+<section class="slide" data-slide="24">
+<div class="slide-inner statement-layout" style="gap:32px;">
+  <div class="cta-card animate delay-1" style="width:100%;">
+    <div class="cta-ew">O PRIMEIRO PASSO</div>
+    <div class="cta-line">12 meses de billing em formato FOCUS.</div>
+    <div class="cta-line" style="color:var(--text-secondary);margin-top:6px;">Em <em class="cta-blank">__</em> semanas, o mapa de lacunas.</div>
+  </div>
+  <div class="animate delay-stanza" style="text-align:center;width:100%;">
+    <p class="stmt-p1">O problema não é preço.</p>
+    <p class="stmt-p2">É <span class="gradient-text">idioma</span>.</p>
+  </div>
+</div>
+</section>
+
+
+<!-- ═══════════════════════════════════ S26 CONTATO -->
+<section class="slide" data-slide="25">
+<div class="slide-inner contact-layout">
+  <div>
+    <div class="eyebrow animate delay-1">PARA DAR O PRIMEIRO PASSO</div>
+    <h2 class="contact-title animate delay-2">Ricardo Santos</h2>
+    <div class="contact-role animate delay-2">FinOps Lead · finCodex</div>
+    <div class="contact-items">
+      <div class="contact-item animate delay-2">
+        <div class="ci-icon">✉</div>
+        <div><span class="ci-label">Email</span><span class="ci-value">contato@fincodex.com</span></div>
+      </div>
+      <div class="contact-item animate delay-3">
+        <div class="ci-icon" style="background:rgba(10,102,194,0.1);border-color:rgba(10,102,194,0.3);"><svg viewBox="0 0 24 24" width="22" height="22" xmlns="http://www.w3.org/2000/svg" fill="#0A66C2"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></div>
+        <div><span class="ci-label">LinkedIn</span><span class="ci-value">in/ricardoshuree</span></div>
+      </div>
+      <div class="contact-item animate delay-4">
+        <div class="ci-icon" style="color:var(--text-secondary);"><svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="3"/><line x1="9" y1="5.5" x2="15" y2="5.5"/><circle cx="12" cy="18.5" r="1" fill="currentColor" stroke="none"/></svg></div>
+        <div><span class="ci-label">WhatsApp</span><span class="ci-value">+55 51 99141-6177</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="contact-right animate delay-3">
+    <div class="qr-card">
+      <div class="qr-wa-badge"><span style="font-size:14px">✓</span> WhatsApp</div>
+      <div class="qr-canvas-wrap"><img src="data:image/png;base64,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" width="160" height="160" alt="QR Code WhatsApp" style="border-radius:6px;image-rendering:crisp-edges;"/></div>
+      <div class="qr-label">Aponte a câmera para iniciar conversa</div>
+      <div class="qr-num">+55 51 99141-6177</div>
+    </div>
+  </div>
+</div>
+</section>
+
+</main>
+
+<!-- ═══════════════════════════════════════════ BOTTOM NAV -->
+<div id="bottom-nav">
+  <button class="nav-arrow" onclick="prevSlide()">←</button>
+  <div class="nav-dots" id="nav-dots"></div>
+  <span id="nav-counter">01 / 09</span>
+  <div class="nav-sep"></div>
+  <button id="roteiro-btn" onclick="toggleRoteiro()"><span class="toggle-pip"></span><span>R</span></button>
+  <button id="mode-toggle" onclick="toggleMode()"><span class="toggle-pip"></span><span id="mode-label">CLARO</span></button>
+  <button class="nav-arrow" onclick="nextSlide()">→</button>
+</div>
+
+<script>
+/* ══ NAVIGATION ══════════════════════════════════════════════════════ */
+const slides = document.querySelectorAll('.slide');
+const total  = slides.length;
+let cur = 0;
+window._cs = 0;
+
+function goToSlide(n) {
+  slides[cur].classList.remove('active');
+  slides[cur].querySelectorAll('.animate').forEach(el => el.classList.remove('in'));
+  cur = Math.max(0, Math.min(n, total - 1));
+  window._cs = cur;
+  slides[cur].classList.add('active');
+  updateNav();
+  requestAnimationFrame(() => { triggerAnimations(); triggerSVG(cur); });
+  animateCounters();
+}
+const nextSlide = () => goToSlide(cur + 1);
+const prevSlide = () => goToSlide(cur - 1);
+
+function updateNav() {
+  const pct = (cur + 1) / total * 100 + '%';
+  document.getElementById('progress-bar').style.width = pct;
+  const lbl = String(cur + 1).padStart(2,'0') + ' / ' + String(total).padStart(2,'0');
+  document.getElementById('nav-counter').textContent = lbl;
+  document.getElementById('slide-num').textContent   = lbl;
+  document.querySelectorAll('.nav-dot').forEach((d, i) => d.classList.toggle('active', i === cur));
+}
+(function() {
+  const el = document.getElementById('nav-dots');
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('div');
+    d.className = 'nav-dot' + (i === 0 ? ' active' : '');
+    d.onclick = () => goToSlide(i);
+    el.appendChild(d);
+  }
+})();
+document.addEventListener('keydown', e => {
+  if (['ArrowRight','ArrowDown',' '].includes(e.key)) { e.preventDefault(); nextSlide(); }
+  if (['ArrowLeft','ArrowUp'].includes(e.key))        { e.preventDefault(); prevSlide(); }
+  if (e.key === 'Home') { e.preventDefault(); goToSlide(0); }
+  if (e.key === 'End')  { e.preventDefault(); goToSlide(total - 1); }
+});
+let tx = 0;
+document.addEventListener('touchstart', e => { tx = e.changedTouches[0].screenX; });
+document.addEventListener('touchend',   e => {
+  const d = tx - e.changedTouches[0].screenX;
+  if (Math.abs(d) > 50) { d > 0 ? nextSlide() : prevSlide(); }
+});
+
+/* ══ ANIMATIONS ══════════════════════════════════════════════════════ */
+function triggerAnimations() {
+  slides[cur].querySelectorAll('.animate').forEach(el => { void el.offsetWidth; el.classList.add('in'); });
+}
+function animateCounters() {
+  slides[cur].querySelectorAll('[data-count]').forEach(el => {
+    const target = parseInt(el.dataset.count), sfx = el.dataset.suffix || '';
+    let c = 0; const step = Math.ceil(target / 40);
+    const iv = setInterval(() => { c += step; if (c >= target) { c = target; clearInterval(iv); } el.textContent = c + sfx; }, 25);
+  });
+}
+
+/* ══ S04 SVG ANIMATION ═══════════════════════════════════════════════ */
+function triggerSVG(idx) {
+  if (idx !== 3) return;
+  const sl    = slides[3];
+  const paths = sl.querySelectorAll('.anim-path');
+  const fill  = sl.querySelector('.anim-fill');
+  const lbls  = sl.querySelectorAll('.anim-label');
+  paths.forEach(p => { p.style.transition = 'none'; p.style.strokeDasharray = '1300'; p.style.strokeDashoffset = '1300'; });
+  if (fill) { fill.style.transition = 'none'; fill.style.opacity = '0'; }
+  lbls.forEach(l => { l.style.transition = 'none'; l.style.opacity = '0'; });
+  void sl.offsetWidth;
+  setTimeout(() => { paths[0].style.transition = 'stroke-dashoffset 2.2s cubic-bezier(.4,0,.2,1)'; paths[0].style.strokeDashoffset = '0'; }, 150);
+  setTimeout(() => { if(paths[1]){paths[1].style.transition = 'stroke-dashoffset 1.8s cubic-bezier(.4,0,.2,1)'; paths[1].style.strokeDashoffset = '0';} }, 450);
+  if (fill) setTimeout(() => { fill.style.transition = 'opacity 1.1s ease'; fill.style.opacity = '1'; }, 600);
+  lbls.forEach((l, i) => setTimeout(() => { l.style.transition = 'opacity .7s ease'; l.style.opacity = '1'; }, 1700 + i * 200));
+}
+
+/* ══ MODE TOGGLE ══════════════════════════════════════════════════════ */
+let isDark = false;
+const pDark = {'--brand-bg':'#1E0E05','--brand-surface':'#281408','--brand-surface-2':'#32180A','--brand-border':'#3C1E0A','--brand-border-hi':'#503018','--brand-primary':'#C08830','--brand-primary-dim':'rgba(192,136,48,0.18)','--brand-primary-glow':'rgba(192,136,48,0.35)','--brand-secondary':'#DCAA46','--brand-secondary-dim':'rgba(220,170,70,0.15)','--brand-success':'#4ADE80','--brand-success-dim':'rgba(74,222,128,0.15)','--brand-error':'#EF4444','--brand-error-dim':'rgba(239,68,68,0.15)','--brand-warning':'#FBBF24','--text-primary':'#EAE0CC','--text-secondary':'#B4AA96','--text-muted':'#665A46','--gt1':'#C08830','--gt2':'#DCAA46','--gt3':'#E6B858'};
+const pLight= {'--brand-bg':'#EAE0CC','--brand-surface':'#F5EDD8','--brand-surface-2':'#E0D4BA','--brand-border':'#D2C8AA','--brand-border-hi':'#BEB096','--brand-primary':'#C08830','--brand-primary-dim':'rgba(192,136,48,0.12)','--brand-primary-glow':'rgba(192,136,48,0.25)','--brand-secondary':'#8C6018','--brand-secondary-dim':'rgba(140,96,24,0.12)','--brand-success':'#276747','--brand-success-dim':'rgba(39,103,71,0.12)','--brand-error':'#C0392B','--brand-error-dim':'rgba(192,57,43,0.12)','--brand-warning':'#8C7800','--text-primary':'#1E0E05','--text-secondary':'#503018','--text-muted':'#8C826E','--gt1':'#C08830','--gt2':'#DCAA46','--gt3':'#E6B858'};
+function applyPalette(p) { Object.entries(p).forEach(([k,v]) => document.documentElement.style.setProperty(k,v)); }
+function toggleMode() {
+  isDark = !isDark;
+  applyPalette(isDark ? pDark : pLight);
+  document.getElementById('mode-label').textContent = isDark ? 'ESCURO' : 'CLARO';
+}
+
+/* ══ ROTEIRO POPUP ════════════════════════════════════════════════════ */
+const roteiro = [
+  {slide:0,texto:`[S01] Bom dia. Nos próximos 45 minutos vou mostrar como trabalhamos custo de nuvem — e por que a nossa abordagem é diferente do que vocês provavelmente já viram. [TRANSIÇÃO] Vou começar por uma afirmação.`},
+  {slide:1,texto:`[S02] Vou fazer uma afirmação e passar os próximos 40 minutos defendendo ela. [pausa de 2 segundos] A maior parte do desperdício em nuvem não é caro. É invisível. E é invisível porque ninguém consegue ler as faturas inteiras ao mesmo tempo. Reparem que eu não disse que vocês pagam caro. Eu disse que vocês não conseguem ler. São problemas diferentes, e eles pedem soluções diferentes. Quem acha que o problema é preço vai negociar desconto. Quem entende que o problema é leitura vai atrás de outra coisa. [TRANSIÇÃO] Então deixa eu mostrar o caminho que a gente percorre.`},
+  {slide:2,texto:`[S03] Este é o caminho inteiro. Cinco marcos. Começa com dado — e é o único momento em que eu vou pedir alguma coisa de vocês. Depois vem o diagnóstico, que é trabalho nosso: a gente lê e volta com um mapa. No terceiro marco vocês entram, porque hipótese só vale se alguém de infraestrutura validar. No quarto a gente investiga cada uma até o fundo. E no quinto, o que sobreviveu vira compromisso assinado. Vou percorrer esta linha com vocês. Toda vez que ela reaparecer na tela, é para vocês saberem onde estamos. [TRANSIÇÃO] Mas antes de entrar na jornada, preciso explicar por que ela existe.`},
+  {slide:3,texto:`[S04] Vou descrever uma cena que provavelmente é familiar. Chega o fechamento do mês. A conta de nuvem veio maior que o mês passado. Alguém pergunta por quê. E a resposta honesta, na maioria das organizações, é: a gente cresceu. Que pode ser verdade. Mas ninguém consegue provar. [apontar para a área sombreada] Essa lacuna aqui é o problema. Não é que o gasto sobe — gasto de nuvem sobe mesmo, é da natureza do modelo. O problema é que a capacidade de explicar o gasto não sobe junto. Ninguém nesta sala aprova uma nota fiscal que não entende. Mas todo mês a nuvem manda uma, e ela é aprovada. Não por indisciplina — mas porque desligar é pior que pagar. Isso não é falha de gestão. É assimetria de informação. [TRANSIÇÃO] É exatamente para fechar essa lacuna que existe a disciplina de FinOps. Mas eu preciso desfazer um mal-entendido sobre ela.`},
+  {slide:4,texto:`[S05] FinOps virou sinônimo de corte de custo, e isso é um mal-entendido caro. FinOps é a disciplina de atribuir responsabilidade sobre um gasto que é variável por natureza. Antes da nuvem, infraestrutura era CAPEX: você decidia uma vez, comprava, e o custo estava travado por três anos. Hoje qualquer engenheiro cria um recurso em quarenta segundos. FinOps é a resposta organizacional a isso. [apontar a sequência] E reparem na ordem, porque ela importa. Informar vem primeiro. Otimizar é a segunda fase, não a primeira. Quem começa por otimizar corta na carne — porque não sabe o que está cortando. Por isso, quando a gente chega, os primeiros dias não produzem nenhuma economia. Produzem entendimento. [TRANSIÇÃO] Agora, se essa disciplina existe há alguns anos, por que estamos falando dela hoje?`},
+  {slide:5,texto:`[S06] Três dados do último levantamento da FinOps Foundation. O primeiro: noventa e oito por cento das organizações já gerenciam ativamente custo de IA. Há dois anos eram trinta e um por cento. Gasto de IA não substituiu gasto de nuvem — somou. O segundo: setenta e oito por cento das práticas de FinOps hoje reportam ao CTO ou CIO. Deixou de ser assunto de planilha do financeiro e virou assunto de mesa de diretoria. E o terceiro é o mais relevante. Praticantes maduros estão relatando retorno decrescente. As grandes pedras de desperdício já foram atingidas. O que sobrou está espalhado em milhares de linhas e só aparece com análise sistemática. O problema não ficou menor. Ficou mais difícil de ver. [TRANSIÇÃO] Por que é tão difícil ver? A resposta está na próxima tela.`},
+  {slide:6,texto:`[S07] Uma pergunta simples: quanto custou o serviço X no mês passado? Para responder isso em quatro nuvens, você precisa escrever quatro consultas diferentes, porque cada uma chama a mesma coisa por um nome diferente. [gesto amplo sobre a tabela] Não precisam ler. O ponto é justamente esse: é ruído. Mas eu quero ser honesto: os nomes são o problema MENOR. Nome se resolve com uma tabela de-para, em uma tarde. O problema maior é que o significado também muda. Na AWS, o campo de custo não amortiza compromisso de longo prazo. Na Azure, amortiza. Se você somar os dois, o número fecha — e está errado. Ninguém percebe, porque não dá erro. Só dá número. E para o mesmo mês-calendário, a Azure e a Oracle marcam o início do período em datas diferentes. Março na Azure e março na Oracle não são o mesmo intervalo. Isso não é detalhe de engenharia. É a razão pela qual consolidar quatro nuvens costuma levar meses. [TRANSIÇÃO] Se esse problema é tão universal, alguém já deve ter resolvido. E resolveram.`},
+  {slide:7,texto:`[S08] FOCUS. FinOps Open Cost and Usage Specification. É uma especificação aberta que define como um fornecedor deve entregar dados de faturamento: quais colunas existem, como se chamam, e — mais importante — o que cada uma significa. O efeito prático: aquela mesma pergunta do slide anterior passa a ter uma consulta só. Vale para Azure, para AWS, para Google, para Oracle. Sem tradução, sem camada de normalização que alguém da sua equipe precisa manter para sempre. [apontar o rodapé] Não fomos nós que inventamos isso. É um padrão aberto, mantido pela FinOps Foundation sob a Linux Foundation, com os próprios provedores sentados à mesa. Se daqui a um ano vocês quiserem trocar de consultoria, ou levar isso para dentro de casa — a base continua servindo. Ela não é nossa. Nós não pedimos que vocês adotem a linguagem da finCodex. Pedimos que usem a linguagem que as próprias nuvens já adotaram. [TRANSIÇÃO] E quando eu digo as próprias nuvens, não é força de expressão.`},
+  {slide:8,texto:`[S09] Estes são os fornecedores que já publicam faturamento nesse formato. Não é lista de intenção — é o que já sai de produção hoje. A linha do tempo importa por um motivo específico. [percorrer com o dedo] Cinco versões em dois anos, com comitê de direção e programa de conformidade. Isso é o oposto de aposta. Um padrão que não evolui morre; um que evolui rápido demais quebra quem o adotou. Este tem cadência semestral e compatibilidade preservada. Mas o que eu queria mesmo mostrar é a última linha. [apontar 1.5] A próxima versão está sendo escrita agora, e o tema dela é economia de tokens de IA. O padrão já está resolvendo o problema que vocês vão ter no ano que vem. Você herda o trabalho de todo mundo. [TRANSIÇÃO] Existe um problema real, existe uma linguagem que resolve a parte de leitura dele, e essa linguagem já está disponível na conta de vocês. A pergunta que sobra é o que a gente faz com isso. É a jornada.`}
+,
+  {slide:9,texto:`[S10] Voltamos para o mapa. Marco um: dados. Este é o único momento da jornada em que eu peço alguma coisa de vocês antes de entregar qualquer coisa. E é um pedido só. [TRANSIÇÃO] É este.`},
+  {slide:10,texto:`[S11] Doze meses de faturamento em formato FOCUS, um export por nuvem. Só isso. E doze meses não é capricho, é o mínimo técnico. Com três meses, a gente confunde sazonalidade com desperdício. Doze meses é o que permite dizer isso é ciclo em vez de isso é sobra. E uma observação prática: se o export FOCUS ainda não estiver ligado na conta de vocês, isso é configuração de console — não é projeto de TI, não precisa de janela de mudança. A gente orienta e sai no mesmo dia. O que a gente não pede: acesso aos ambientes de vocês, credencial, VPN, agente instalado. Nada disso. Só o arquivo. [TRANSIÇÃO] E já que estamos falando de dado saindo da casa de vocês, deixa eu antecipar a pergunta que sempre vem.`},
+  {slide:11,texto:`[S12] Sempre que alguém ouve me mande doze meses de faturamento, a pergunta seguinte é: e o que acontece com esse dado? [apontar o diagrama] Cada cliente tem pipeline próprio, isolado. Base separada, processamento separado. Não existe uma base mãe onde tudo se junta. Não existe cruzamento. E não existe benchmark de mercado construído com o dado de vocês sem que vocês tenham autorizado explicitamente. Isso não é política escrita num documento que ninguém lê. É como o sistema foi construído — não haveria como cruzar mesmo que quiséssemos. E tem um ponto sobre LGPD que vale dizer: billing FOCUS não contém dado pessoal. Por definição do padrão, o que está ali é máquina, serviço, região, quantidade e custo. Não tem nome, não tem CPF, não tem dado de cliente de vocês. Se o jurídico de vocês quiser aprofundar, eu prefiro que essa conversa aconteça antes do contrato, não depois. [TRANSIÇÃO] Recebido o arquivo, o que a gente faz com ele?`},
+  {slide:12,texto:`[S13] Sessenta segundos sobre a parte técnica, porque não é o que interessa a vocês — mas interessa que seja industrial e não artesanal. O arquivo chega como vier: CSV ou Parquet, uma pasta ou trezentas, versões diferentes do padrão misturadas. A plataforma detecta o que é cada coisa e converte para uma base analítica única. [apontar o número] Para dar uma ideia de escala: só a base da OCI de um dos nossos clientes tem cento e noventa e cinco milhões de linhas de faturamento, e uma pergunta cruzando quatro nuvens volta em segundos. Por que isso importa? Porque significa que a gente não trabalha com amostra. Quando eu disser um número mais adiante, ele veio da base inteira. [TRANSIÇÃO] E com a base pronta, a primeira coisa que a gente responde não é quanto dá para economizar. É outra pergunta.`},
+  {slide:13,texto:`[S14] Este é o slide mais desconfortável da apresentação. E é o mais útil. Antes de falar em economia, a gente responde uma pergunta mais básica: quem consome o quê? A resposta se organiza em três camadas. C1 é o ideal: eu olho a linha de faturamento e sei exatamente qual aplicação gerou aquele custo. C2 é o intermediário: eu sei o domínio, mas não consigo descer até a aplicação. C3 é o incômodo: o recurso existe, consome, é cobrado — e ninguém consegue apontar o dono. [pausa, apontar C3] Em uma organização típica, a maior fatia do gasto está em C3. E eu quero ser claro sobre o que isso significa e o que não significa. Não significa que a equipe de infraestrutura é desorganizada. Significa que a nuvem cresceu mais rápido que a disciplina de marcação — o que é o padrão do mercado, não a exceção. Enquanto existir uma camada C3 grande, o rateio entre unidades de negócio é uma convenção, não uma medição. Algumas unidades aqui estão subsidiando outras, e ninguém sabe quais. Isso não é problema de FinOps. É o problema que o FinOps revela. [TRANSIÇÃO] Resolvida essa base, a gente volta com a primeira devolutiva.`},
+  {slide:14,texto:`[S15] Algumas semanas depois do arquivo chegar, a gente volta com isto. [deixar a plateia olhar por 3 segundos] Não é um relatório de recomendações genéricas. É uma lista nominal de hipóteses de economia, cada uma com um valor, e cada uma com uma alavanca. Esta aqui é real. Fictícios Company, ambiente AWS. Dez meses de faturamento, duzentos e trinta e cinco mil dólares analisados, duas vírgula três milhões de linhas de billing processadas. [callout ①] Aqui estão as hipóteses. Treze, neste caso. Cada uma tem um identificador, porque a partir daqui elas passam a ser rastreadas individualmente até o fim do projeto. [callout ②] Aqui está o valor. Sessenta e oito mil seiscentos a cento e três mil dólares por ano. E reparem que é uma faixa, não um número. Vou voltar nisso no próximo slide. [callout ③] E aqui está a alavanca — o que muda no ambiente para o valor se realizar. Este documento cabe em uma página de propósito. [TRANSIÇÃO] Mas eu preciso abrir uma dessas hipóteses, porque é ali que mora a diferença do nosso trabalho.`},
+  {slide:15,texto:`[S16] Esta é uma hipótese, aberta. Uma de treze mapeadas num workspace de Databricks de um cliente nosso. Ela tem um identificador, uma alavanca, um responsável, um estágio no fluxo. Mas eu quero falar do campo do meio. [apontar a faixa] Faixa. Não número. E isso é deliberado. O mínimo é o que a gente sustenta hoje, com o dado que tem na mão. O máximo é o que a gente sustenta se a investigação confirmar as premissas. Por que isso importa? Porque quem apresenta número único em diagnóstico está estimando. Na primeira devolutiva ninguém tem informação suficiente para um ponto — só para um intervalo. E quando alguém mostra um ponto, aquele ponto foi escolhido. Geralmente para impressionar. [pausa — revelar a regra] A gente tem uma regra na casa, e ela está implementada dentro da plataforma: Nenhum número desta apresentação foi estimado. Todos vieram de consulta executada sobre o billing de vocês. Se eu não consigo rodar a consulta, o número não entra no slide. Na prática, isso significa que a plataforma trava. Não é disciplina do consultor — é trava do sistema, justamente porque disciplina de consultor cansa e sistema não. [TRANSIÇÃO] E é justamente por causa dessa régua que a próxima etapa é a mais trabalhosa da jornada.`},
+  {slide:16,texto:`[S17] Marco três. E aqui muda a natureza do trabalho. Até agora foi nosso. A gente pegou o arquivo, processou, analisou e voltou. Daqui pra frente é de vocês também — porque hipótese formulada por quem lê o faturamento precisa ser confrontada por quem conhece o ambiente. A gente vai chegar com uma hipótese dizendo esse conjunto de máquinas está subutilizado. E o time de infraestrutura vai dizer: essas cinco sim, mas aquelas três são o ambiente de contingência do ERP e não podem ser tocadas. Isso é validação. Ela derruba hipótese, e é para isso que existe. [apontar o funil] Reparem que o funil já começa a estreitar aqui. Isso é o processo funcionando. [apontar o card] E preciso ser direto: o único fator que já atrasou projetos nossos foi ponto focal sem agenda. Não é falta de competência — as equipes de infraestrutura são sempre competentes. É agenda. A pessoa que conhece o ambiente é sempre a mais requisitada da área. Então o pedido é nominal: uma pessoa, com horas reservadas na semana. Não é dedicação integral. Mas é agenda que não some. [TRANSIÇÃO] Com as hipóteses validadas, começa a parte mais trabalhosa.`},
+  {slide:17,texto:`[S18] Cada hipótese validada vira uma investigação. E cada investigação produz um destes. [deixar olhar] Chamamos de Evidence Card. É o documento que fecha uma hipótese — com a evidência que sustenta o número final, não a estimativa inicial. [apontar o workspace PRD-001] E olha — esta é a mesma hipótese que eu mostrei no slide anterior. Ali eu mostrei ela isolada, os campos, a faixa. Aqui está a investigação inteira que a sustentou. O diagnóstico inicial tinha identificado dois workspaces de Databricks. A investigação achou nove — incluindo workspaces de IA que cresceram de zero a cinquenta mil reais por mês em seis meses, sem nenhum limite de orçamento. Isso não estava visível no primeiro diagnóstico porque o primeiro diagnóstico lê o billing. Quem acha os nove workspaces é quem entra no ambiente e pergunta. É aqui que o trabalho fica pesado, e é aqui que a gente precisa dos times técnicos de vocês. Nada disso está no faturamento. O faturamento diz que vocês pagam por Databricks. Ele não diz que um workspace de teste está gastando como produção porque ninguém configurou auto-termination. Essa parte a gente só descobre perguntando. E vale dizer o que este documento não é: não é entregável nosso, para justificar honorário. É o registro que fica com vocês. [TRANSIÇÃO] E quando a investigação termina, acontecem duas coisas — e elas são diferentes.`},
+  {slide:18,texto:`[S19] Quando uma investigação termina, acontecem dois aceites. E a gente faz questão de separar. O primeiro é técnico. O time de infraestrutura valida que a hipótese é verdadeira e executável — que o número está certo e que dá para fazer sem quebrar nada. O segundo é executivo. O diretor da área, ou o sponsor do projeto, captura. E capturar é um ato específico: é assumir aquele valor no orçamento. Sem o segundo aceite, o valor não existe. Vira slide. Já vi projeto de FinOps entregar quarenta hipóteses validadas tecnicamente e nenhuma capturada, porque ninguém assumiu o compromisso de mudar o número no orçamento. Do ponto de vista da empresa, aquele projeto economizou zero. [apontar a parte de baixo] E a segunda separação: economia realizada é quando a conta do mês que vem é menor. Custo evitado é quando a conta não sobe como ia subir. Os dois são valor legítimo. Mas eles não são a mesma coisa, e a gente nunca soma os dois no mesmo número. Se somasse, o número seria maior. E a confiança de vocês seria menor. Quando o CFO pedir para conciliar com o razão contábil, só a primeira coluna vai aparecer lá. Se a gente tiver misturado, a conversa acaba ali. [TRANSIÇÃO] Certo. Então esse é o método. A pergunta que sobra é: como vocês acompanham tudo isso acontecendo, sem depender de eu vir aqui contar?`}
+,
+  {slide:19,texto:`[S20] Uma pergunta que sempre vem: como eu acompanho isso sem depender de reunião de status? [apontar o placar] Este quadro fica disponível para vocês durante o projeto inteiro. Cada hipótese aparece com o estágio em que está, quem é o responsável e o que está bloqueando. Reparem no fluxo: backlog, investigação, confirmada, capturada. Uma hipótese não pula etapa. E se ela morre no caminho, ela aparece morta — não some do quadro. [apontar o bloqueio] E aqui está a parte que eu queria destacar. Esta hipótese está bloqueada há quinze dias — sem previsão de retorno. E o bloqueio é nosso, não é do time de vocês. É a nossa equipe buscando evidência suficiente para fechar o Evidence Card com o rigor que exigimos. A gente marca os dois lados. Relatório de consultoria que só mostra pendência do cliente vira instrumento de defesa, não de gestão. E aí ninguém olha mais. [TRANSIÇÃO] Olhando esse quadro, é razoável alguém pensar: isso parece coisa que uma ferramenta faz. Vale a pena eu enfrentar essa pergunta de frente.`},
+  {slide:20,texto:`[S21] Vocês provavelmente já têm uma ferramenta de FinOps, ou vão comprar uma. E eu não vou dizer que é desperdício — não é. Ferramenta é boa e vocês vão querer uma. Mas quero descrever com precisão o que ela faz e o que ela não faz. [coluna esquerda] Ferramenta gera recomendação continuamente. Todo dia ela olha o ambiente e aponta oportunidades. O problema não é a qualidade delas — é que a fila cresce mais rápido que a capacidade de executar. Esse é o padrão de falha do FinOps, e é quase universal. A organização compra a ferramenta, ela aponta trezentas oportunidades, executam-se quarenta, e no mês seguinte a fila tem trezentas e cinquenta. Passa um ano e a sensação é de que a ferramenta não entregou — quando na verdade ela entregou demais, e o gargalo estava em outro lugar. [coluna direita] O que a gente traz é o outro lado. A gente não gera recomendação: a gente persegue um número finito de hipóteses até alguém aceitar ou rejeitar. Com nome, agenda e evidência. Tem uma linha aí que vale destacar: ferramenta otimiza o que ela enxerga no faturamento. Mas aqueles nove workspaces de Databricks que eu mostrei — o faturamento só sabia de dois. Foi a investigação que achou os outros sete. Só a investigação descobre isso. E a última linha é a que resume tudo. A métrica da ferramenta é economia identificada. A nossa é valor capturado e assinado. São números muito diferentes, e só um deles aparece no orçamento. [TRANSIÇÃO] E já que a métrica é essa, vocês têm o direito de ver como ela se comporta na prática. Inclusive a parte feia.`},
+  {slide:21,texto:`[S22] Este é o funil de um engajamento nosso, com números reais. Fictícios Company, Azure e OCI consolidados — o AWS deles está em acompanhamento separado, então não entra nesta conta. [percorrer de cima para baixo] Levantamos trinta e cinco hipóteses no diagnóstico — quatorze milhões a dezoito milhões e oitocentos mil reais de potencial, na faixa mais larga possível. Depois de entrarem em investigação ativa, ficaram vinte e quatro. Confirmadas tecnicamente, dezessete. E capturadas — assinadas pelo sponsor — dez. [pausa] Eu poderia ter mostrado só a primeira linha. Dezoito milhões é o número maior, e é o número que costuma aparecer em apresentação de consultoria. Mostro as quatro porque a queda é o método funcionando, não falhando. Dez das trinta e cinco foram rechaçadas — quase trinta por cento. A hipótese que morre na investigação é uma hipótese que não virou promessa quebrada. [apontar a lista] E elas caem por motivos específicos, não por desistência. A telemetria não confirmou a premissa. Havia uma restrição técnica que o faturamento não mostrava. Ou — e este é o mais interessante — o negócio olhou e decidiu conscientemente pagar. Que é uma decisão perfeitamente legítima, desde que seja decisão e não desconhecimento. No fim, o valor que importa é o de baixo. Três milhões e duzentos a três milhões e seiscentos mil. É o único que aparece no orçamento de vocês. [TRANSIÇÃO] Certo. Se vocês decidirem seguir, como isso se organiza no calendário?`},
+  {slide:22,texto:`[S23] O calendário, com os papéis lado a lado — porque prazo sem responsabilidade nomeada não se cumpre. [percorrer] Fase um é a mais rápida e depende só do export. Fase dois é trabalho nosso. Vocês não precisam fazer nada, e é aqui que produzimos a One Page. [apontar a devolutiva] Este é o marco que eu sugiro que vocês usem para nos avaliar. Em duas semanas vocês têm o mapa de lacunas na mão. Se ele não fizer sentido, a conversa acaba ali, e vocês ficam com o diagnóstico. Fase três precisa do ponto focal — aquele pedido que fizemos antes. Fase quatro é a mais longa e a mais intensa em interação técnica. Mas é sob demanda, não é dedicação contínua. Fase cinco é rápida em execução e crítica em agenda. Precisa do sponsor disponível para as sessões de captura. Se o sponsor não tiver agenda, o valor fica parado em confirmada e não vira orçamento. [TRANSIÇÃO] E aí vem a pergunta que fecha: o que sobra quando a gente for embora?`},
+  {slide:23,texto:`[S24] Três coisas ficam. A base, em padrão aberto — que vocês podem plugar em qualquer ferramenta, dar para outra consultoria, ou operar internamente. Como eu disse no começo: ela não é nossa. A taxonomia de alocação. Aquela camada C3, onde ninguém sabia o dono, menor do que estava. E o rateio entre unidades deixando de ser convenção e virando medição. E a rotina. Que é a parte que ninguém pede e todo mundo precisa. [pausa] Porque o desperdício volta. Sempre volta. Não porque alguém foi negligente, mas porque a nuvem é fácil de provisionar e difícil de revisar. Se a gente cortar trinta por cento hoje e não deixar rotina nenhuma, daqui a dezoito meses vocês estão no mesmo lugar. Então eu diria assim: se ao final deste trabalho vocês só tiverem economizado, nós entregamos metade. A outra metade é a capacidade de não perder de novo. [TRANSIÇÃO] E é com isso que eu fecho.`},
+  {slide:24,texto:`[S25] O convite é pequeno, de propósito. Doze meses de faturamento em formato FOCUS. Em duas semanas, vocês têm o mapa de lacunas na mão — com as hipóteses, os valores em faixa e as alavancas. E decidem dali. [pausa — apontar a frase final] Eu comecei dizendo que o problema não é preço, é idioma. Passei os últimos quarenta minutos tentando mostrar isso: que a conta de vocês provavelmente está correta, que ninguém errou, e que mesmo assim há valor parado ali dentro — parado porque ninguém consegue ler tudo ao mesmo tempo. O primeiro passo é só nos deixar ler a fatura. Obrigado.`}
+,
+  {slide:25,texto:`[S26] Obrigado pela atenção. Qualquer dúvida que ficou, ou se quiserem aprofundar algum ponto do que vimos hoje — estou disponível por email, LinkedIn ou WhatsApp. O QR code ao lado abre direto uma conversa. O primeiro passo pode ser agora.`}
+];
+
+let rWin = null;
+function _wpm(t) { const w = t.trim().split(/\s+/).length, m = Math.round(w/130); return m < 1 ? '< 1 min' : '≈ ' + m + ' min'; }
+function _buildPopup() {
+  const items = roteiro.map((r,i) => {
+    const secs = Math.max(30, Math.round(r.texto.trim().split(/\s+/).length / 130 * 60));
+    return `<div class="ri" id="ri${i}" data-slide="${r.slide}" data-secs="${secs}"><div class="rih"><div class="rim"><span class="rin">Slide ${String(r.slide+1).padStart(2,'0')}</span><span class="rit">${_wpm(r.texto)}</span><span class="rbadge">▶ EM EXIBIÇÃO</span><span class="rcd" id="cd${i}"></span></div><div class="rinav"><button onclick="nav(${r.slide-1})">←</button><button onclick="nav(${r.slide+1})">→</button></div></div><p class="rip">${r.texto}</p></div>`;
+  }).join('');
+  const c=['*{box-sizing:border-box;margin:0;padding:0}',':root{--pb:#F4F4F3;--ps:#FFF;--ps2:#EAEAE8;--pbr:#D2D2D0;--pt:#0F0F0F;--pm:#888;--pl:#aaa;--psc:#ccc;--pac:#eae7c4}','body{font-family:"Space Grotesk",sans-serif;background:var(--pb);color:var(--pt);height:100vh;display:flex;flex-direction:column;overflow:hidden}','#tb{background:var(--ps);border-bottom:1px solid var(--pbr);padding:9px 12px;display:flex;align-items:center;gap:7px;flex-shrink:0}','#td{font-family:"JetBrains Mono",monospace;font-size:19px;font-weight:700;color:#C08830;letter-spacing:3px;flex:1}','.pbtn{background:transparent;border:1px solid var(--pbr);border-radius:6px;padding:4px 10px;color:var(--pm);cursor:pointer;font-size:10px;font-family:"JetBrains Mono",monospace;letter-spacing:1px;transition:all .18s}','.pbtn:hover{border-color:#C08830;color:#C08830}','#sb{background:var(--ps2);border-bottom:1px solid var(--pbr);padding:7px 12px;flex-shrink:0}','#sb label{font-size:11px;color:var(--pm);display:flex;align-items:center;gap:7px;cursor:pointer}','#as{accent-color:#C08830;cursor:pointer;width:13px;height:13px}','#rs{overflow-y:auto;flex:1;padding:8px}','#rs::-webkit-scrollbar{width:3px}','#rs::-webkit-scrollbar-thumb{background:var(--psc);border-radius:2px}','.ri{border-radius:8px;padding:10px 12px;margin-bottom:7px;background:var(--ps);border:1px solid var(--pbr);border-left:3px solid transparent;transition:all .22s}','.ri:not(.active){opacity:.4}','.ri.active{opacity:1!important;background:var(--pac);border-color:#C08830!important;border-left:4px solid #C08830!important;box-shadow:0 0 0 1.5px #C08830}','.rih{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}','.rim{display:flex;align-items:center;gap:6px;flex-wrap:wrap}','.rin{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--pl);letter-spacing:1px;text-transform:uppercase}','.ri.active .rin{color:#C08830;font-weight:700}','.rit{font-family:"JetBrains Mono",monospace;font-size:9px;background:var(--ps2);color:var(--pl);padding:2px 6px;border-radius:4px}','.ri.active .rit{background:rgba(192,136,48,0.18);color:#C08830}','.rbadge{display:none;font-family:"JetBrains Mono",monospace;font-size:8px;letter-spacing:1px;text-transform:uppercase;background:#C08830;color:#fff;padding:2px 7px;border-radius:4px;font-weight:700}','.ri.active .rbadge{display:inline-block}','.rcd{display:none;font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:700;color:#EF4444;background:rgba(239,68,68,.12);padding:2px 7px;border-radius:4px;letter-spacing:1px;min-width:44px;text-align:center}','.rcd.urgent{animation:pulse-cd .6s infinite}','@keyframes pulse-cd{0%,100%{opacity:1}50%{opacity:.5}}','.rinav{display:flex;gap:4px;flex-shrink:0}','.rinav button{background:transparent;border:1px solid var(--pbr);border-radius:4px;width:22px;height:22px;color:var(--pm);cursor:pointer;font-size:12px;transition:all .15s;display:flex;align-items:center;justify-content:center}','.rinav button:hover{border-color:#C08830;color:#C08830}','.rip{font-size:11.5px;line-height:1.68;color:var(--pm)}','.ri.active .rip{color:var(--pt);font-size:12px}'].join('');
+  const j=['var on=false,s=0,iv,ll=-1,cdIv=null,cdSecs=0,cdEl=null;','function tt(){on=!on;document.getElementById("tbt").innerHTML=on?"&#9646;&#9646; Pausar":"&#9654; Iniciar";if(on){iv=setInterval(function(){s++;var h=("0"+Math.floor(s/3600)).slice(-2),m=("0"+Math.floor(s%3600/60)).slice(-2),x=("0"+s%60).slice(-2);document.getElementById("td").textContent=h+":"+m+":"+x},1000)}else{clearInterval(iv);s=0;document.getElementById("td").textContent="00:00:00"}}','function nav(n){try{window.opener.goToSlide(n)}catch(e){}}','function startCd(el,sec){if(cdIv)clearInterval(cdIv);cdEl=el;cdSecs=sec;rCd();cdIv=setInterval(function(){cdSecs=Math.max(0,cdSecs-1);rCd();if(cdSecs===0){clearInterval(cdIv);cdIv=null}},1000)}','function rCd(){if(!cdEl)return;cdEl.textContent=String(Math.floor(cdSecs/60)).padStart(2,"0")+":"+String(cdSecs%60).padStart(2,"0");cdEl.style.display="inline-block";cdEl.classList.toggle("urgent",cdSecs>0&&cdSecs<=15)}','function stopCd(){if(cdIv){clearInterval(cdIv);cdIv=null}if(cdEl){cdEl.style.display="none";cdEl.textContent=""}cdEl=null}','function sync(){var chk=document.getElementById("as").checked;try{var c=window.opener._cs||0;document.querySelectorAll(".ri").forEach(function(el){var a=parseInt(el.dataset.slide)===c,was=el.classList.contains("active");el.classList.toggle("active",a);if(a){el.scrollIntoView({block:"nearest",behavior:"smooth"});if(chk&&(!was||ll!==c)){startCd(el.querySelector(".rcd"),parseInt(el.dataset.secs))}}else if(was){var cd=el.querySelector(".rcd");if(cd){cd.style.display="none";cd.textContent=""}}});if(!chk&&cdIv)stopCd();ll=c}catch(e){}}','document.getElementById("as").addEventListener("change",function(){if(!this.checked)stopCd()});','setInterval(sync,300);sync();'].join('');
+  return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Roteiro — finCodex FinOps Focus</title><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"><style>${c}</style></head><body><div id="tb"><span id="td">00:00:00</span><button id="tbt" class="pbtn" onclick="tt()">&#9654; Iniciar</button></div><div id="sb"><label><input type="checkbox" id="as" checked> Sincronizar automaticamente</label></div><div id="rs">${items}</div><script>${j}<\/script></body></html>`;
+}
+function toggleRoteiro() {
+  const btn = document.getElementById('roteiro-btn');
+  if (rWin && !rWin.closed) { rWin.close(); rWin = null; btn.classList.remove('open'); return; }
+  const pw = 380, ph = 560;
+  const left = Math.max(0, window.screenX + window.outerWidth - pw - 14);
+  const top  = Math.max(0, window.screenY + 40);
+  rWin = window.open('', 'fincodex_roteiro', `width=${pw},height=${ph},left=${left},top=${top},resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no`);
+  if (!rWin) { alert('Popup bloqueado. Permita popups para esta página.'); return; }
+  rWin.document.write(_buildPopup()); rWin.document.close();
+  btn.classList.add('open');
+  const chk = setInterval(() => { if (!rWin || rWin.closed) { btn.classList.remove('open'); rWin = null; clearInterval(chk); } }, 500);
+}
+
+/* ══ INIT ════════════════════════════════════════════════════════════ */
+slides[0].classList.add('active');
+updateNav();
+requestAnimationFrame(triggerAnimations);
+</script>
+</body>
+</html>
